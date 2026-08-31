@@ -214,3 +214,7 @@ Never try to recreate one by your hand, always use the install with cli.
 If it's not a design system ui primite, create the component either in root components folder if does not belong to a specific feature (for example layout components etc...) or in the feature's components folder if it does belong to a specific feature.
 
 Most of the components should expose a classname prop (and use cn to compose with internal classname) so you can customize their appearance.
+
+## Deployment preview proof
+
+Changes under `apps/web` trigger a Vercel preview deployment so frontend builds can be reviewed before merging.

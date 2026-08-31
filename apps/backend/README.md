@@ -111,3 +111,7 @@ Then just update the .env file to match your local infra configuration.
 ```bash
 DATABASE_URL=postgresql://todo:todo@localhost:5432/todo
 ```
+
+## Deployment preview proof
+
+Changes under `apps/backend` trigger an isolated Railway pull-request environment so backend deployments can be reviewed before merging.
