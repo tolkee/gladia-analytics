@@ -1,0 +1,39 @@
+{
+  "name": "gladia-analytics",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "test": "bun test",
+    "quality": "turbo run lint format",
+    "quality:fix": "turbo run lint:fix format:fix",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt ."
+  },
+  "dependencies": {
+    "@hono/standard-validator": "^0.3.0"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.61.0",
+    "oxlint": "^1.76.0",
+    "railway": "^3.11.0",
+    "turbo": "^2.10.8",
+    "typescript": "^7.0.2"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.3.14"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

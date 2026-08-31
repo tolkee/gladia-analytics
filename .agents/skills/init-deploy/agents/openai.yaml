@@ -1,0 +1,4 @@
+interface:
+  display_name: "Initialize Deployment"
+  short_description: "Deploy one selected frontend through Railway and Vercel"
+  default_prompt: "Use $init-deploy to release the selected frontend and API on my confirmed domains."

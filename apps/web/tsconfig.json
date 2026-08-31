@@ -1,0 +1,10 @@
+{
+  "extends": "@gladia-analytics/ts-config/base.json",
+  "include": ["**/*.ts", "**/*.tsx", "vite.config.ts", "../backend/src/lib/result.ts"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "noUncheckedSideEffectImports": true
+  }
+}

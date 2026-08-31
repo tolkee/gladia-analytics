@@ -1,0 +1,9 @@
+{
+  "extends": "@gladia-analytics/ts-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

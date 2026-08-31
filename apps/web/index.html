@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" class="[--header-height:--spacing(14)] lg:[--header-height:--spacing(16)]">
+  <head>
+    <script>
+      (() => {
+        try {
+          const storedTheme = localStorage.getItem("theme");
+          const theme =
+            storedTheme === "light" || storedTheme === "dark" || storedTheme === "system"
+              ? storedTheme
+              : "system";
+          const resolvedTheme =
+            theme === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : theme;
+
+          document.documentElement.classList.add(resolvedTheme);
+          document.documentElement.style.colorScheme = resolvedTheme;
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

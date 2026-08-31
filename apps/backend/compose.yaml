@@ -1,0 +1,32 @@
+name: gladia-analytics
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+      POSTGRES_DB: todo
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo -d todo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  db-gateway:
+    image: ghcr.io/drizzle-team/gateway:1.3.0
+    ports:
+      - 4983:4983
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - db_gateway_data:/app
+volumes:
+  postgres_data:
+  db_gateway_data:

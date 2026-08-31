@@ -1,0 +1,4 @@
+interface:
+  display_name: "Initialize Fork"
+  short_description: "Rename a fork and select its SPA or SSR frontend"
+  default_prompt: "Use $init-fork to rename this template and keep either its SPA or SSR frontend."

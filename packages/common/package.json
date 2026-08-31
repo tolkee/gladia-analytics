@@ -1,0 +1,22 @@
+{
+  "name": "@gladia-analytics/common",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./errors": "./src/errors.ts",
+    "./utils": "./src/utils.ts",
+    "./env": "./src/env.ts"
+  },
+  "scripts": {
+    "dev": "bun tsc --noEmit --watch",
+    "test": "bun test",
+    "typecheck": "bun tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@gladia-analytics/ts-config": "workspace:*",
+    "@types/bun": "^1.3.14"
+  }
+}

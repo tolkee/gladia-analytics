@@ -1,0 +1,47 @@
+{
+  "name": "@gladia-analytics/web",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#features/*": "./src/features/*/index.ts",
+    "#lib/*": "./src/lib/*.ts",
+    "#hooks/*": "./src/hooks/*.ts",
+    "#components/*": "./src/components/*.tsx",
+    "#routes/*": "./src/routes/*.tsx"
+  },
+  "scripts": {
+    "dev": "bun --bun vite dev",
+    "build": "bun --bun vite build",
+    "preview": "bun --bun vite preview",
+    "typecheck": "bun tsc --noEmit"
+  },
+  "dependencies": {
+    "@gladia-analytics/backend": "workspace:*",
+    "@gladia-analytics/common": "workspace:*",
+    "@gladia-analytics/ui": "workspace:*",
+    "@hugeicons/core-free-icons": "^4.3.0",
+    "@hugeicons/react": "^1.1.10",
+    "@tailwindcss/vite": "^4",
+    "@tanstack/react-devtools": "latest",
+    "@tanstack/react-query": "^5.102.6",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-router-devtools": "latest",
+    "better-auth": "^1.7.1",
+    "hono": "^4.13.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@gladia-analytics/ts-config": "workspace:*",
+    "@tanstack/devtools-vite": "latest",
+    "@tanstack/router-plugin": "latest",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "typescript": "^6",
+    "vite": "^8"
+  }
+}
