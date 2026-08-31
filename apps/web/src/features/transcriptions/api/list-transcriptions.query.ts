@@ -7,6 +7,7 @@ import {
 } from "#lib/errors";
 import type { InfiniteQuery } from "#lib/query";
 import { infiniteQueryOptions, type InfiniteData } from "@tanstack/react-query";
+import type { PeriodRange, PeriodSelection } from "../period";
 
 const endpoint = apiClient.api.organisations[":organisationId"].transcriptions.$get;
 const PAGE_SIZE = 50;
@@ -15,9 +16,22 @@ type ListTranscriptionsSuccessResponse = InferSuccessResponseType<typeof endpoin
 type ListTranscriptionsErrorResponse = InferErrorResponseType<typeof endpoint>;
 export type TranscriptionSummary = ListTranscriptionsSuccessResponse["data"][number];
 
-const key = (userId: string, organisationId: string) => ["transcriptions", userId, organisationId];
+const key = (
+  userId: string,
+  organisationId: string,
+  selection: PeriodSelection,
+  range: PeriodRange,
+) =>
+  selection.type === "preset"
+    ? ["transcriptions", userId, organisationId, "preset", selection.period, range.from, range.to]
+    : ["transcriptions", userId, organisationId, "custom", range.from, range.to];
 
-const options = (userId: string, organisationId: string) =>
+const options = (
+  userId: string,
+  organisationId: string,
+  selection: PeriodSelection,
+  range: PeriodRange,
+) =>
   infiniteQueryOptions<
     ListTranscriptionsSuccessResponse,
     ApiError<ListTranscriptionsErrorResponse>,
@@ -25,11 +39,12 @@ const options = (userId: string, organisationId: string) =>
     ReturnType<typeof key>,
     string | null
   >({
-    queryKey: key(userId, organisationId),
+    queryKey: key(userId, organisationId, selection, range),
     queryFn: async ({ pageParam }) => {
       const response = await endpoint({
         param: { organisationId },
         query: {
+          ...range,
           limit: PAGE_SIZE.toString(),
           ...(pageParam ? { cursor: pageParam } : {}),
         },

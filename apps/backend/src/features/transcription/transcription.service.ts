@@ -1,15 +1,12 @@
 import type { User } from "#features/auth";
 import type { Organisation, OrganisationService } from "#features/organisation";
 import type { Db } from "#lib/db";
-import {
-  decodePaginationCursor,
-  encodePaginationCursor,
-  type CursorPaginationQuery,
-} from "#lib/pagination";
+import { decodePaginationCursor, encodePaginationCursor } from "#lib/pagination";
 import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
 import type {
   AnalyticsLanguageMode,
   AnalyticsTimeRange,
+  TranscriptionsQuery,
   TranscriptionSource,
 } from "./transcription.dto";
 import { transcriptionCursorSchema } from "./transcription.dto";
@@ -221,7 +218,7 @@ export class TranscriptionService {
   async getTranscriptions(
     userId: User["id"],
     organisationId: Organisation["id"],
-    query: CursorPaginationQuery,
+    query: TranscriptionsQuery,
   ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
@@ -255,7 +252,14 @@ export class TranscriptionService {
         billableSeconds: transcriptionsTable.billableSeconds,
       })
       .from(transcriptionsTable)
-      .where(and(eq(transcriptionsTable.organisationId, organisationId), cursorFilter))
+      .where(
+        and(
+          eq(transcriptionsTable.organisationId, organisationId),
+          gte(transcriptionsTable.createdAt, query.from),
+          lt(transcriptionsTable.createdAt, query.to),
+          cursorFilter,
+        ),
+      )
       .orderBy(desc(transcriptionsTable.createdAt), desc(transcriptionsTable.id))
       .limit(query.limit + 1);
 

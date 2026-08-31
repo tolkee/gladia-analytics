@@ -197,9 +197,9 @@ export function TranscriptionsDataTable({
                 className="flex w-full flex-col items-center justify-center gap-1 text-center"
                 colSpan={columns.length}
               >
-                <span className="font-medium">No transcriptions yet</span>
+                <span className="font-medium">No transcriptions in this period</span>
                 <span className="text-xs text-muted-foreground">
-                  New transcriptions will appear here.
+                  Try selecting a longer period to look further back.
                 </span>
               </TableCell>
             </TableRow>

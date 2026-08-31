@@ -1,8 +1,5 @@
-import type { AnalyticsSelection } from "../../api/get-transcription-analytics.query";
-import {
-  formatAnalyticsSelectionLabel,
-  formatAnalyticsSelectionShortLabel,
-} from "./analytics-period-picker";
+import type { PeriodSelection } from "../../period";
+import { formatPeriodSelectionLabel, formatPeriodSelectionShortLabel } from "../period-picker";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { Card, CardContent } from "@gladia-analytics/ui/components/card";
 import { Skeleton } from "@gladia-analytics/ui/components/skeleton";
@@ -10,7 +7,7 @@ import { AlertCircleIcon, Analytics02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 type AnalyticsEmptyStateProps = {
-  selection: AnalyticsSelection;
+  selection: PeriodSelection;
 };
 
 export function AnalyticsEmptyState({ selection }: AnalyticsEmptyStateProps) {
@@ -87,10 +84,10 @@ export function AnalyticsPageSkeleton() {
   );
 }
 
-function emptyStateRangeLabel(selection: AnalyticsSelection): string {
+function emptyStateRangeLabel(selection: PeriodSelection): string {
   if (selection.type === "preset") {
-    return `the last ${formatAnalyticsSelectionShortLabel(selection)}`;
+    return `the last ${formatPeriodSelectionShortLabel(selection)}`;
   }
 
-  return formatAnalyticsSelectionLabel(selection);
+  return formatPeriodSelectionLabel(selection);
 }

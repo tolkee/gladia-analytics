@@ -1,3 +1,4 @@
+import { cursorPaginationQuerySchema } from "#lib/pagination";
 import * as z from "zod";
 
 const durationSchema = z.number().finite().nonnegative();
@@ -55,10 +56,26 @@ export const analyticsIntervals = ["hour", "day", "week", "month"] as const;
 export const analyticsIntervalSchema = z.enum(analyticsIntervals);
 export type AnalyticsInterval = z.infer<typeof analyticsIntervalSchema>;
 
-export const analyticsTimeRangeSchema = z
-  .object({
-    from: z.coerce.date(),
-    to: z.coerce.date(),
+const timeRangeObjectSchema = z.object({
+  from: z.coerce.date(),
+  to: z.coerce.date(),
+});
+
+export const timeRangeSchema = timeRangeObjectSchema.refine(
+  (timeRange) => timeRange.from < timeRange.to,
+  {
+    path: ["to"],
+    message: "The end of the range must be after its start.",
+  },
+);
+
+export type TimeRange = z.infer<typeof timeRangeSchema>;
+
+export const transcriptionsQuerySchema = cursorPaginationQuerySchema.and(timeRangeSchema);
+export type TranscriptionsQuery = z.infer<typeof transcriptionsQuerySchema>;
+
+export const analyticsTimeRangeSchema = timeRangeObjectSchema
+  .extend({
     interval: analyticsIntervalSchema.default("day"),
   })
   .superRefine((timeRange, ctx) => {
