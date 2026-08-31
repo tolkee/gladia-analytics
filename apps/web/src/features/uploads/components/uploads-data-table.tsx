@@ -57,16 +57,8 @@ const columns = columnHelper.columns([
     size: 190,
     cell: ({ getValue }) => dateFormatter.format(new Date(getValue())),
   }),
-  columnHelper.accessor("completedAt", {
-    header: "Completed",
-    size: 190,
-    cell: ({ getValue }) => {
-      const completedAt = getValue();
-      return completedAt ? dateFormatter.format(new Date(completedAt)) : "—";
-    },
-  }),
   columnHelper.accessor("error", {
-    header: "Result",
+    header: "Info",
     size: 280,
     cell: ({ getValue }) => {
       const error = getValue();
@@ -102,7 +94,7 @@ export function UploadsDataTable({ uploads }: UploadsDataTableProps) {
     <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
       <Table
         aria-label="Transcription uploads"
-        className="grid min-w-[1330px]"
+        className="grid min-w-[1140px]"
         containerClassName="h-full overflow-auto"
       >
         <TableHeader className="sticky top-0 z-10 grid bg-background shadow-[0_1px_0_var(--border)]">
