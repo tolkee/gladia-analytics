@@ -1,6 +1,8 @@
 import { getTranscriptionQuery } from "../../api/get-transcription.query";
-import { TranscriptionDetailError } from "./transcription-detail-error";
-import { TranscriptionDetailSkeleton } from "./transcription-detail-skeleton";
+import {
+  TranscriptionDetailError,
+  TranscriptionDetailSkeleton,
+} from "./transcription-detail-states";
 import { TranscriptionDetailView } from "./transcription-detail-view";
 import { Sheet, SheetContent } from "@gladia-analytics/ui/components/sheet";
 import { useQuery } from "@tanstack/react-query";
