@@ -1,4 +1,5 @@
 import { authClient } from "#lib/auth";
+import { getSessionQuery } from "#features/auth";
 import { Route } from "#routes/_auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@gladia-analytics/ui/components/avatar";
 import {
@@ -49,10 +50,11 @@ function UserIdentity({ email, image, name }: UserIdentityProps) {
 export function AppSidebarUser() {
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { user } = Route.useRouteContext();
+  const { queryClient, user } = Route.useRouteContext();
 
   async function logout() {
     await authClient.signOut();
+    queryClient.setQueryData(getSessionQuery.key(), null);
     await router.invalidate();
     await router.navigate({ to: "/login" });
   }

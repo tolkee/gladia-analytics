@@ -4,7 +4,7 @@ import { Toaster } from "@gladia-analytics/ui/components/toast";
 import { TooltipProvider } from "@gladia-analytics/ui/components/tooltip";
 
 import { type RouterContext } from "../router";
-import { authClient } from "#lib/auth";
+import { getSessionQuery } from "#features/auth";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
@@ -28,8 +28,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     </main>
   ),
   component: RootDocument,
-  beforeLoad: async () => {
-    const { data: session } = await authClient.getSession();
+  beforeLoad: async ({ context }) => {
+    const session = await context.queryClient.query(getSessionQuery.options());
 
     return {
       user: session?.user ?? null,
