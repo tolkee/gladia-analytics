@@ -52,6 +52,7 @@ export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
           {organisation.role !== "viewer" ? (
             <Button
               size="sm"
+              className="max-sm:size-7 max-sm:gap-0 max-sm:px-0 max-sm:has-data-[icon=inline-start]:pl-0"
               nativeButton={false}
               aria-label="Upload file"
               render={
