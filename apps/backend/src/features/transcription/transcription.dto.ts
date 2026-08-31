@@ -21,6 +21,20 @@ const transcriptionResultSchema = z.object({
   }),
 });
 
+export const transcriptionRequestParamsSchema = z.object({
+  model: z.string().trim().min(1).max(255),
+  detect_language: z.boolean().optional(),
+  language_config: z.object({
+    languages: z
+      .array(z.string().trim().min(1).max(35))
+      .max(100)
+      .transform((languages) => [...new Set(languages.map((language) => language.toLowerCase()))]),
+    code_switching: z.boolean(),
+  }),
+});
+
+export type TranscriptionRequestParams = z.infer<typeof transcriptionRequestParamsSchema>;
+
 export const transcriptionSourceSchema = z.object({
   id: z.uuid(),
   request_id: z.string().trim().min(1).max(255),
@@ -32,19 +46,7 @@ export const transcriptionSourceSchema = z.object({
   error_code: z.string().max(255).nullable(),
   kind: z.enum(["live", "pre-recorded"]),
   file: transcriptionFileSchema.nullable(),
-  request_params: z.object({
-    model: z.string().trim().min(1).max(255),
-    detect_language: z.boolean().optional(),
-    language_config: z.object({
-      languages: z
-        .array(z.string().trim().min(1).max(35))
-        .max(100)
-        .transform((languages) => [
-          ...new Set(languages.map((language) => language.toLowerCase())),
-        ]),
-      code_switching: z.boolean(),
-    }),
-  }),
+  request_params: transcriptionRequestParamsSchema,
   result: transcriptionResultSchema.nullable(),
 });
 
