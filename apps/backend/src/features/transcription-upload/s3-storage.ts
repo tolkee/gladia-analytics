@@ -7,7 +7,11 @@ export class S3Storage implements FileStorage {
   constructor(private readonly client: S3Client) {}
 
   async write(key: string, data: Request, contentType: string): Promise<number> {
-    return this.client.write(key, data, { type: contentType });
+    await this.client.write(key, data, { type: contentType });
+
+    // Bun can report zero bytes for successfully persisted streamed uploads, so rely on the
+    // stored object's metadata instead of the write return value.
+    return (await this.client.stat(key)).size;
   }
 
   createDownloadRequest(key: string): PresignedDownloadRequest {
