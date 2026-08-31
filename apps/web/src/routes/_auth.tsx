@@ -1,4 +1,3 @@
-import { SiteHeader } from "#components/site-header";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth")({
@@ -13,10 +12,5 @@ export const Route = createFileRoute("/_auth")({
 
     return { user: context.user, session: context.session };
   },
-  component: () => (
-    <>
-      <SiteHeader />
-      <Outlet />
-    </>
-  ),
+  component: Outlet,
 });

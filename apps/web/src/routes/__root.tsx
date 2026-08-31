@@ -1,6 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 
 import { Toaster } from "@gladia-analytics/ui/components/toast";
+import { TooltipProvider } from "@gladia-analytics/ui/components/tooltip";
 
 import { type RouterContext } from "../router";
 import { authClient } from "#lib/auth";
@@ -16,7 +17,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Todo app",
+        title: "Gladia Analytics",
       },
     ],
   }),
@@ -41,7 +42,9 @@ function RootDocument() {
   return (
     <>
       <HeadContent />
-      <Outlet />
+      <TooltipProvider>
+        <Outlet />
+      </TooltipProvider>
       <Toaster />
       <Scripts />
     </>
