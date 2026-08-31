@@ -17,6 +17,7 @@
     "typecheck": "bun tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed:transcriptions": "bun run scripts/seed-transcriptions.ts",
     "infra:up": "docker compose -p gladia-analytics up",
     "infra:up:d": "docker compose -p gladia-analytics up -d",
     "infra:down": "docker compose -p gladia-analytics down",
