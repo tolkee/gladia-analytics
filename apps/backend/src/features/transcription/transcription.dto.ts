@@ -6,8 +6,8 @@ const sourceTimestampSchema = z.iso.datetime({ offset: true });
 
 const transcriptionFileSchema = z.object({
   id: z.uuid(),
-  filename: z.string().trim().min(1).max(1_024),
-  source: z.string().max(2_048).nullable(),
+  filename: z.string().trim().min(1),
+  source: z.string().nullable(),
   audio_duration: durationSchema,
   number_of_channels: channelCountSchema,
 });
@@ -22,12 +22,11 @@ const transcriptionResultSchema = z.object({
 });
 
 export const transcriptionRequestParamsSchema = z.object({
-  model: z.string().trim().min(1).max(255),
+  model: z.string().trim().min(1),
   detect_language: z.boolean().optional(),
   language_config: z.object({
     languages: z
-      .array(z.string().trim().min(1).max(35))
-      .max(100)
+      .array(z.string().trim().min(1))
       .transform((languages) => [...new Set(languages.map((language) => language.toLowerCase()))]),
     code_switching: z.boolean(),
   }),
@@ -37,13 +36,13 @@ export type TranscriptionRequestParams = z.infer<typeof transcriptionRequestPara
 
 export const transcriptionSourceSchema = z.object({
   id: z.uuid(),
-  request_id: z.string().trim().min(1).max(255),
+  request_id: z.string().trim().min(1),
   version: z.number().int().nonnegative(),
-  status: z.string().trim().min(1).max(100),
+  status: z.string().trim().min(1),
   created_at: sourceTimestampSchema,
   completed_at: sourceTimestampSchema.nullable(),
   custom_metadata: z.record(z.string(), z.unknown()).nullable(),
-  error_code: z.string().max(255).nullable(),
+  error_code: z.string().nullable(),
   kind: z.enum(["live", "pre-recorded"]),
   file: transcriptionFileSchema.nullable(),
   request_params: transcriptionRequestParamsSchema,
@@ -53,7 +52,7 @@ export const transcriptionSourceSchema = z.object({
 export type TranscriptionSource = z.infer<typeof transcriptionSourceSchema>;
 
 export const createTranscriptionsSchema = z.object({
-  items: z.array(transcriptionSourceSchema).max(50_000),
+  items: z.array(transcriptionSourceSchema),
 });
 
 export type CreateTranscriptionsInput = z.infer<typeof createTranscriptionsSchema>;
@@ -98,7 +97,6 @@ export const removeTranscriptionsSchema = z.object({
   ids: z
     .array(z.uuid())
     .min(1)
-    .max(1_000)
     .transform((ids) => [...new Set(ids)]),
 });
 
