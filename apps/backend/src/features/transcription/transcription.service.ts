@@ -27,7 +27,6 @@ import {
   round,
   toNumber,
   toTranscriptionInsert,
-  transcriptionUpsertSet,
 } from "./transcription.helpers";
 import { transcriptionsTable, type Transcription } from "./transcription.schema";
 
@@ -350,7 +349,32 @@ export class TranscriptionService {
             .values(values.slice(start, start + INSERT_CHUNK_SIZE))
             .onConflictDoUpdate({
               target: [transcriptionsTable.organisationId, transcriptionsTable.id],
-              set: transcriptionUpsertSet,
+              set: {
+                requestId: sql.raw('excluded."request_id"'),
+                version: sql.raw('excluded."version"'),
+                status: sql.raw('excluded."status"'),
+                createdAt: sql.raw('excluded."created_at"'),
+                completedAt: sql.raw('excluded."completed_at"'),
+                customMetadata: sql.raw('excluded."custom_metadata"'),
+                errorCode: sql.raw('excluded."error_code"'),
+                kind: sql.raw('excluded."kind"'),
+                fileId: sql.raw('excluded."file_id"'),
+                fileName: sql.raw('excluded."file_name"'),
+                fileSource: sql.raw('excluded."file_source"'),
+                fileAudioDuration: sql.raw('excluded."file_audio_duration"'),
+                fileNumberOfChannels: sql.raw('excluded."file_number_of_channels"'),
+                model: sql.raw('excluded."model"'),
+                detectLanguage: sql.raw('excluded."detect_language"'),
+                languages: sql.raw('excluded."languages"'),
+                codeSwitching: sql.raw('excluded."code_switching"'),
+                resultAudioDuration: sql.raw('excluded."result_audio_duration"'),
+                resultNumberOfDistinctChannels: sql.raw(
+                  'excluded."result_number_of_distinct_channels"',
+                ),
+                resultBillingTime: sql.raw('excluded."result_billing_time"'),
+                resultTranscriptionTime: sql.raw('excluded."result_transcription_time"'),
+                billableSeconds: sql.raw('excluded."billable_seconds"'),
+              },
             });
         }
       });

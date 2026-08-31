@@ -1,5 +1,4 @@
 import type { Organisation } from "#features/organisation";
-import { sql } from "drizzle-orm";
 import type {
   AnalyticsInterval,
   AnalyticsLanguageMode,
@@ -12,31 +11,6 @@ import { transcriptionsTable } from "./transcription.schema";
 export const REALTIME_HOURLY_RATE_USD = 0.2;
 export const ASYNC_HOURLY_RATE_USD = 0.12;
 export const INSERT_CHUNK_SIZE = 500;
-
-export const transcriptionUpsertSet = {
-  requestId: excluded("request_id"),
-  version: excluded("version"),
-  status: excluded("status"),
-  createdAt: excluded("created_at"),
-  completedAt: excluded("completed_at"),
-  customMetadata: excluded("custom_metadata"),
-  errorCode: excluded("error_code"),
-  kind: excluded("kind"),
-  fileId: excluded("file_id"),
-  fileName: excluded("file_name"),
-  fileSource: excluded("file_source"),
-  fileAudioDuration: excluded("file_audio_duration"),
-  fileNumberOfChannels: excluded("file_number_of_channels"),
-  model: excluded("model"),
-  detectLanguage: excluded("detect_language"),
-  languages: excluded("languages"),
-  codeSwitching: excluded("code_switching"),
-  resultAudioDuration: excluded("result_audio_duration"),
-  resultNumberOfDistinctChannels: excluded("result_number_of_distinct_channels"),
-  resultBillingTime: excluded("result_billing_time"),
-  resultTranscriptionTime: excluded("result_transcription_time"),
-  billableSeconds: excluded("billable_seconds"),
-};
 
 export function toTranscriptionInsert(
   organisationId: Organisation["id"],
@@ -140,10 +114,6 @@ export function toNumber(value: number | string | null | undefined): number {
 
 export function round(value: number): number {
   return Math.round((value + Number.EPSILON) * 1_000_000) / 1_000_000;
-}
-
-function excluded(columnName: string) {
-  return sql.raw(`excluded."${columnName}"`);
 }
 
 function floorToInterval(date: Date, interval: AnalyticsInterval): Date {
