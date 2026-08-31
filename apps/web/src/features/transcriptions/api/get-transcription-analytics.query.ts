@@ -71,36 +71,12 @@ export const getTranscriptionAnalyticsQuery = {
   options,
 } satisfies Query;
 
-export function isAnalyticsPeriod(value: unknown): value is AnalyticsPeriod {
-  return analyticsPeriods.some((period) => period === value);
-}
-
-export function isAnalyticsCalendarDate(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(Date.UTC(year, month - 1, day));
-
-  return (
-    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
-  );
-}
-
 export function analyticsSelectionFromSearch(search: {
   period?: AnalyticsPeriod;
   from?: string;
   to?: string;
 }): AnalyticsSelection {
-  if (
-    isAnalyticsCalendarDate(search.from) &&
-    isAnalyticsCalendarDate(search.to) &&
-    search.from <= search.to
-  ) {
+  if (search.from && search.to && search.from <= search.to) {
     return { type: "custom", from: search.from, to: search.to };
   }
 

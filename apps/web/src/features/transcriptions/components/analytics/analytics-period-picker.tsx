@@ -2,7 +2,7 @@ import {
   analyticsPeriods,
   type AnalyticsPeriod,
   type AnalyticsSelection,
-} from "../api/get-transcription-analytics.query";
+} from "../../api/get-transcription-analytics.query";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { Calendar } from "@gladia-analytics/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@gladia-analytics/ui/components/popover";
