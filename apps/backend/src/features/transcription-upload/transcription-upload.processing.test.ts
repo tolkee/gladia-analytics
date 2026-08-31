@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
-  TranscriptionImportProcessingError,
+  TranscriptionUploadProcessingError,
   validateTranscriptionItem,
-} from "./transcription-import.processing";
+} from "./transcription-upload.processing";
 
 describe("validateTranscriptionItem", () => {
   test("validates and normalizes one transcription without retaining unknown fields", () => {
@@ -27,8 +27,8 @@ describe("validateTranscriptionItem", () => {
       validateTranscriptionItem(42, { ...validSource(), created_at: "not-a-date" });
       throw new Error("Expected validation to fail");
     } catch (error) {
-      expect(error).toBeInstanceOf(TranscriptionImportProcessingError);
-      expect((error as TranscriptionImportProcessingError).details).toMatchObject({
+      expect(error).toBeInstanceOf(TranscriptionUploadProcessingError);
+      expect((error as TranscriptionUploadProcessingError).details).toMatchObject({
         code: "INVALID_TRANSCRIPTION",
         metadata: {
           itemIndex: 42,

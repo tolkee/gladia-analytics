@@ -140,31 +140,31 @@ bun run db:seed:transcriptions --organisation-id <uuid> --count 250 --seed demo-
 Run `bun run db:seed:transcriptions --help` for all options. Re-running the command replaces its
 deterministic seed rows without touching other transcriptions.
 
-## Transcription imports
+## Transcription uploads
 
 Transcription JSON files are uploaded through the backend as a raw request body:
 
 ```http
-POST /api/organisations/:organisationId/transcription-imports?filename=transcriptions.json
+POST /api/organisations/:organisationId/transcription-uploads?filename=transcriptions.json
 Content-Type: application/json
 
 <raw JSON file body>
 ```
 
 The backend streams the request into S3-compatible storage without buffering the whole file,
-records the authoritative number of uploaded bytes, and creates the import in the `queued` state.
+records the authoritative number of uploaded bytes, and creates the upload in the `queued` state.
 The in-process worker then validates the stored JSON as a stream, stages normalized transcriptions
-in bounded batches, and atomically merges a successful import into the analytics dataset. Imports
+in bounded batches, and atomically merges a successful upload into the analytics dataset. Uploads
 are incremental: new transcription IDs are appended and equal or newer versions update existing
-rows. Transcriptions absent from an import are preserved.
+rows. Transcriptions absent from an upload are preserved.
 
 `processedItems` is updated after each staged batch and is the final item count when processing
-completes. Invalid JSON or transcription data fails the whole import with a structured JSON error;
+completes. Invalid JSON or transcription data fails the whole upload with a structured JSON error;
 staged rows are then removed while the original S3 object remains available for inspection.
 
 This POC deliberately uses one proxied HTTP upload and an in-process polling worker. A production
 version intended for multi-GB files should add resumable S3 multipart uploads, a durable queue,
-worker leases, and asynchronous cleanup for very large failed imports.
+worker leases, and asynchronous cleanup for very large failed uploads.
 
-Imports are organisation-scoped. Organisation admins may upload files, while all organisation
-members may inspect an import and request a download URL.
+Uploads are organisation-scoped. Organisation admins may upload files, while all organisation
+members may inspect an upload and request a download URL.

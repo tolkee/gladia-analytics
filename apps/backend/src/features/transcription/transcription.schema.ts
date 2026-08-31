@@ -1,5 +1,5 @@
 import { organisationsTable } from "#schemas/organisation";
-import { transcriptionImportsTable } from "#schemas/transcription-import";
+import { transcriptionUploadsTable } from "#schemas/transcription-upload";
 import {
   boolean,
   doublePrecision,
@@ -72,15 +72,15 @@ export const transcriptionsTable = pgTable(
 export const stagedTranscriptionsTable = pgTable(
   "staged_transcriptions",
   {
-    importId: uuid("import_id")
+    uploadId: uuid("upload_id")
       .notNull()
-      .references(() => transcriptionImportsTable.id, { onDelete: "cascade" }),
+      .references(() => transcriptionUploadsTable.id, { onDelete: "cascade" }),
     ...createTranscriptionColumns(),
   },
   (table) => [
     primaryKey({
-      columns: [table.importId, table.organisationId, table.id],
-      name: "staged_transcriptions_import_id_organisation_id_id_pk",
+      columns: [table.uploadId, table.organisationId, table.id],
+      name: "staged_transcriptions_upload_id_organisation_id_id_pk",
     }),
   ],
 );

@@ -329,7 +329,7 @@ export class TranscriptionService {
   }
 
   async addStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
     items: TranscriptionSource[],
   ) {
@@ -339,7 +339,7 @@ export class TranscriptionService {
     >();
 
     for (const item of items) {
-      const transcription = { importId, ...toTranscriptionInsert(organisationId, item) };
+      const transcription = { uploadId, ...toTranscriptionInsert(organisationId, item) };
       const current = transcriptionsById.get(item.id);
 
       if (!current || current.version <= transcription.version) {
@@ -357,7 +357,7 @@ export class TranscriptionService {
             .values(values.slice(start, start + INSERT_CHUNK_SIZE))
             .onConflictDoUpdate({
               target: [
-                stagedTranscriptionsTable.importId,
+                stagedTranscriptionsTable.uploadId,
                 stagedTranscriptionsTable.organisationId,
                 stagedTranscriptionsTable.id,
               ],
@@ -370,21 +370,21 @@ export class TranscriptionService {
   }
 
   async removeStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
   ) {
     await this.db
       .delete(stagedTranscriptionsTable)
       .where(
         and(
-          eq(stagedTranscriptionsTable.importId, importId),
+          eq(stagedTranscriptionsTable.uploadId, uploadId),
           eq(stagedTranscriptionsTable.organisationId, organisationId),
         ),
       );
   }
 
   async mergeStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
   ) {
     return this.db.transaction(async (tx) => {
@@ -418,7 +418,7 @@ export class TranscriptionService {
         .from(stagedTranscriptionsTable)
         .where(
           and(
-            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.uploadId, uploadId),
             eq(stagedTranscriptionsTable.organisationId, organisationId),
           ),
         );
@@ -436,7 +436,7 @@ export class TranscriptionService {
         .delete(stagedTranscriptionsTable)
         .where(
           and(
-            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.uploadId, uploadId),
             eq(stagedTranscriptionsTable.organisationId, organisationId),
           ),
         );

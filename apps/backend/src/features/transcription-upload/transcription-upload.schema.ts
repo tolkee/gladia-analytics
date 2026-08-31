@@ -14,21 +14,21 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const transcriptionImportStatuses = ["queued", "processing", "completed", "failed"] as const;
+export const transcriptionUploadStatuses = ["queued", "processing", "completed", "failed"] as const;
 
-export const transcriptionImportStatusEnum = pgEnum(
-  "transcription_import_status",
-  transcriptionImportStatuses,
+export const transcriptionUploadStatusEnum = pgEnum(
+  "transcription_upload_status",
+  transcriptionUploadStatuses,
 );
 
-export type TranscriptionImportError = {
+export type TranscriptionUploadError = {
   code: string;
   message: string;
   metadata?: Record<string, unknown>;
 };
 
-export const transcriptionImportsTable = pgTable(
-  "transcription_imports",
+export const transcriptionUploadsTable = pgTable(
+  "transcription_uploads",
   {
     id: uuid().defaultRandom().primaryKey(),
     organisationId: uuid("organisation_id")
@@ -39,25 +39,25 @@ export const transcriptionImportsTable = pgTable(
     originalFilename: text("original_filename").notNull(),
     contentType: text("content_type").notNull(),
     sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
-    status: transcriptionImportStatusEnum().default("queued").notNull(),
+    status: transcriptionUploadStatusEnum().default("queued").notNull(),
     processedItems: bigint("processed_items", { mode: "number" }).default(0).notNull(),
-    error: jsonb().$type<TranscriptionImportError>(),
+    error: jsonb().$type<TranscriptionUploadError>(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     processingStartedAt: timestamp("processing_started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("transcription_imports_object_key_uidx").on(table.objectKey),
-    index("transcription_imports_organisation_created_at_idx").on(
+    uniqueIndex("transcription_uploads_object_key_uidx").on(table.objectKey),
+    index("transcription_uploads_organisation_created_at_idx").on(
       table.organisationId,
       table.createdAt,
     ),
-    index("transcription_imports_status_created_at_idx").on(table.status, table.createdAt),
-    check("transcription_imports_size_positive", sql`${table.sizeBytes} > 0`),
-    check("transcription_imports_processed_items_positive", sql`${table.processedItems} >= 0`),
+    index("transcription_uploads_status_created_at_idx").on(table.status, table.createdAt),
+    check("transcription_uploads_size_positive", sql`${table.sizeBytes} > 0`),
+    check("transcription_uploads_processed_items_positive", sql`${table.processedItems} >= 0`),
   ],
 );
 
-export type TranscriptionImport = typeof transcriptionImportsTable.$inferSelect;
-export type TranscriptionImportStatus = TranscriptionImport["status"];
+export type TranscriptionUpload = typeof transcriptionUploadsTable.$inferSelect;
+export type TranscriptionUploadStatus = TranscriptionUpload["status"];

@@ -1,8 +1,8 @@
 import * as z from "zod";
 
-export const TRANSCRIPTION_IMPORT_CONTENT_TYPE = "application/json";
+export const TRANSCRIPTION_UPLOAD_CONTENT_TYPE = "application/json";
 
-const transcriptionImportFilenameSchema = z
+const transcriptionUploadFilenameSchema = z
   .string()
   .trim()
   .min(1)
@@ -16,20 +16,20 @@ const transcriptionImportFilenameSchema = z
     { message: "Filename must not contain control characters" },
   );
 
-export const createTranscriptionImportQuerySchema = z.object({
-  filename: transcriptionImportFilenameSchema,
+export const createTranscriptionUploadQuerySchema = z.object({
+  filename: transcriptionUploadFilenameSchema,
 });
 
-export const createTranscriptionImportHeadersSchema = z.object({
+export const createTranscriptionUploadHeadersSchema = z.object({
   "content-type": z
     .string()
     .transform((contentType) => contentType.split(";", 1)[0]?.trim().toLowerCase() ?? "")
-    .pipe(z.literal(TRANSCRIPTION_IMPORT_CONTENT_TYPE)),
+    .pipe(z.literal(TRANSCRIPTION_UPLOAD_CONTENT_TYPE)),
 });
 
-export type CreateTranscriptionImportInput = z.infer<typeof createTranscriptionImportQuerySchema>;
+export type CreateTranscriptionUploadInput = z.infer<typeof createTranscriptionUploadQuerySchema>;
 
-export const transcriptionImportParamsSchema = z.object({
+export const transcriptionUploadParamsSchema = z.object({
   organisationId: z.uuid(),
-  importId: z.uuid(),
+  uploadId: z.uuid(),
 });

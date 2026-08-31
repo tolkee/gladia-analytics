@@ -1,15 +1,15 @@
 import { transcriptionSourceSchema, type TranscriptionSource } from "#features/transcription";
-import type { TranscriptionImportError } from "./transcription-import.schema";
+import type { TranscriptionUploadError } from "./transcription-upload.schema";
 
 const MAX_STORED_VALIDATION_ISSUES = 10;
 
-export class TranscriptionImportProcessingError extends Error {
+export class TranscriptionUploadProcessingError extends Error {
   constructor(
-    readonly details: TranscriptionImportError,
+    readonly details: TranscriptionUploadError,
     options?: ErrorOptions,
   ) {
     super(details.message, options);
-    this.name = "TranscriptionImportProcessingError";
+    this.name = "TranscriptionUploadProcessingError";
   }
 }
 
@@ -17,7 +17,7 @@ export function validateTranscriptionItem(index: number, value: unknown): Transc
   const result = transcriptionSourceSchema.safeParse(value);
 
   if (!result.success) {
-    throw new TranscriptionImportProcessingError({
+    throw new TranscriptionUploadProcessingError({
       code: "INVALID_TRANSCRIPTION",
       message: `Transcription at index ${index} is invalid`,
       metadata: {
@@ -34,13 +34,13 @@ export function validateTranscriptionItem(index: number, value: unknown): Transc
   return result.data;
 }
 
-export function toTranscriptionImportError(error: unknown): TranscriptionImportError {
-  if (error instanceof TranscriptionImportProcessingError) {
+export function toTranscriptionUploadError(error: unknown): TranscriptionUploadError {
+  if (error instanceof TranscriptionUploadProcessingError) {
     return error.details;
   }
 
   return {
     code: "PROCESSING_FAILED",
-    message: "The transcription import could not be processed",
+    message: "The transcription upload could not be processed",
   };
 }

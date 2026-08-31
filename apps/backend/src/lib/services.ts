@@ -1,6 +1,6 @@
 import { OrganisationService } from "#features/organisation";
 import { TodoService } from "#features/todo";
-import { TranscriptionImportService, type FileStorage } from "#features/transcription-import";
+import { TranscriptionUploadService, type FileStorage } from "#features/transcription-upload";
 import { TranscriptionService } from "#features/transcription";
 import type { Db } from "./db";
 
@@ -8,7 +8,7 @@ export type Services = {
   organisationService: OrganisationService;
   todoService: TodoService;
   transcriptionService: TranscriptionService;
-  transcriptionImportService: TranscriptionImportService;
+  transcriptionUploadService: TranscriptionUploadService;
 };
 
 export function createServices(db: Db, fileStorage: FileStorage): Services {
@@ -19,7 +19,7 @@ export function createServices(db: Db, fileStorage: FileStorage): Services {
     organisationService,
     todoService: new TodoService(db),
     transcriptionService,
-    transcriptionImportService: new TranscriptionImportService(
+    transcriptionUploadService: new TranscriptionUploadService(
       db,
       fileStorage,
       organisationService,

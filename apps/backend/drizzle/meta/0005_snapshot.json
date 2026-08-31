@@ -584,8 +584,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.transcription_imports": {
-      "name": "transcription_imports",
+    "public.transcription_uploads": {
+      "name": "transcription_uploads",
       "schema": "",
       "columns": {
         "id": {
@@ -633,7 +633,7 @@
         },
         "status": {
           "name": "status",
-          "type": "transcription_import_status",
+          "type": "transcription_upload_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -680,8 +680,8 @@
         }
       },
       "indexes": {
-        "transcription_imports_object_key_uidx": {
-          "name": "transcription_imports_object_key_uidx",
+        "transcription_uploads_object_key_uidx": {
+          "name": "transcription_uploads_object_key_uidx",
           "columns": [
             {
               "expression": "object_key",
@@ -695,8 +695,8 @@
           "method": "btree",
           "with": {}
         },
-        "transcription_imports_organisation_created_at_idx": {
-          "name": "transcription_imports_organisation_created_at_idx",
+        "transcription_uploads_organisation_created_at_idx": {
+          "name": "transcription_uploads_organisation_created_at_idx",
           "columns": [
             {
               "expression": "organisation_id",
@@ -716,8 +716,8 @@
           "method": "btree",
           "with": {}
         },
-        "transcription_imports_status_created_at_idx": {
-          "name": "transcription_imports_status_created_at_idx",
+        "transcription_uploads_status_created_at_idx": {
+          "name": "transcription_uploads_status_created_at_idx",
           "columns": [
             {
               "expression": "status",
@@ -739,18 +739,18 @@
         }
       },
       "foreignKeys": {
-        "transcription_imports_organisation_id_organisations_id_fk": {
-          "name": "transcription_imports_organisation_id_organisations_id_fk",
-          "tableFrom": "transcription_imports",
+        "transcription_uploads_organisation_id_organisations_id_fk": {
+          "name": "transcription_uploads_organisation_id_organisations_id_fk",
+          "tableFrom": "transcription_uploads",
           "tableTo": "organisations",
           "columnsFrom": ["organisation_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "transcription_imports_created_by_users_id_fk": {
-          "name": "transcription_imports_created_by_users_id_fk",
-          "tableFrom": "transcription_imports",
+        "transcription_uploads_created_by_users_id_fk": {
+          "name": "transcription_uploads_created_by_users_id_fk",
+          "tableFrom": "transcription_uploads",
           "tableTo": "users",
           "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
@@ -762,13 +762,13 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "transcription_imports_size_positive": {
-          "name": "transcription_imports_size_positive",
-          "value": "\"transcription_imports\".\"size_bytes\" > 0"
+        "transcription_uploads_size_positive": {
+          "name": "transcription_uploads_size_positive",
+          "value": "\"transcription_uploads\".\"size_bytes\" > 0"
         },
-        "transcription_imports_processed_items_positive": {
-          "name": "transcription_imports_processed_items_positive",
-          "value": "\"transcription_imports\".\"processed_items\" >= 0"
+        "transcription_uploads_processed_items_positive": {
+          "name": "transcription_uploads_processed_items_positive",
+          "value": "\"transcription_uploads\".\"processed_items\" >= 0"
         }
       },
       "isRLSEnabled": false
@@ -777,8 +777,8 @@
       "name": "staged_transcriptions",
       "schema": "",
       "columns": {
-        "import_id": {
-          "name": "import_id",
+        "upload_id": {
+          "name": "upload_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -931,11 +931,11 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "staged_transcriptions_import_id_transcription_imports_id_fk": {
-          "name": "staged_transcriptions_import_id_transcription_imports_id_fk",
+        "staged_transcriptions_upload_id_transcription_uploads_id_fk": {
+          "name": "staged_transcriptions_upload_id_transcription_uploads_id_fk",
           "tableFrom": "staged_transcriptions",
-          "tableTo": "transcription_imports",
-          "columnsFrom": ["import_id"],
+          "tableTo": "transcription_uploads",
+          "columnsFrom": ["upload_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -951,9 +951,9 @@
         }
       },
       "compositePrimaryKeys": {
-        "staged_transcriptions_import_id_organisation_id_id_pk": {
-          "name": "staged_transcriptions_import_id_organisation_id_id_pk",
-          "columns": ["import_id", "organisation_id", "id"]
+        "staged_transcriptions_upload_id_organisation_id_id_pk": {
+          "name": "staged_transcriptions_upload_id_organisation_id_id_pk",
+          "columns": ["upload_id", "organisation_id", "id"]
         }
       },
       "uniqueConstraints": {},
@@ -1169,8 +1169,8 @@
       "schema": "public",
       "values": ["owner", "admin", "viewer"]
     },
-    "public.transcription_import_status": {
-      "name": "transcription_import_status",
+    "public.transcription_upload_status": {
+      "name": "transcription_upload_status",
       "schema": "public",
       "values": ["queued", "processing", "completed", "failed"]
     },

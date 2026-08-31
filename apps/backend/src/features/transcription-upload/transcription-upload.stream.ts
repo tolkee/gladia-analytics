@@ -1,5 +1,5 @@
 import { JSONParser } from "@streamparser/json-whatwg";
-import { TranscriptionImportProcessingError } from "./transcription-import.processing";
+import { TranscriptionUploadProcessingError } from "./transcription-upload.processing";
 
 const PARSER_BUFFER_SIZE_BYTES = 64 * 1024;
 
@@ -41,9 +41,9 @@ export async function* streamTranscriptionItems(
       }
 
       if (typeof parsed.value.key !== "number" || !Array.isArray(parsed.value.parent)) {
-        throw new TranscriptionImportProcessingError({
-          code: "INVALID_IMPORT_FORMAT",
-          message: "The import items property must be an array",
+        throw new TranscriptionUploadProcessingError({
+          code: "INVALID_UPLOAD_FORMAT",
+          message: "The upload items property must be an array",
         });
       }
 
@@ -51,24 +51,24 @@ export async function* streamTranscriptionItems(
       yield { index: parsed.value.key, value: parsed.value.value };
     }
   } catch (error) {
-    if (error instanceof TranscriptionImportProcessingError) {
+    if (error instanceof TranscriptionUploadProcessingError) {
       throw error;
     }
 
     if (error instanceof StorageStreamError) {
-      throw new TranscriptionImportProcessingError(
+      throw new TranscriptionUploadProcessingError(
         {
           code: "STORAGE_READ_FAILED",
-          message: "The transcription import could not be read from storage",
+          message: "The transcription upload could not be read from storage",
         },
         { cause: error },
       );
     }
 
-    throw new TranscriptionImportProcessingError(
+    throw new TranscriptionUploadProcessingError(
       {
         code: "INVALID_JSON",
-        message: "The transcription import is not valid JSON",
+        message: "The transcription upload is not valid JSON",
         ...(error instanceof Error && {
           metadata: { reason: error.message.slice(0, 500) },
         }),
@@ -88,9 +88,9 @@ export async function* streamTranscriptionItems(
   }
 
   if (itemCount === 0) {
-    throw new TranscriptionImportProcessingError({
-      code: "INVALID_IMPORT_FORMAT",
-      message: "The import must contain a non-empty items array",
+    throw new TranscriptionUploadProcessingError({
+      code: "INVALID_UPLOAD_FORMAT",
+      message: "The upload must contain a non-empty items array",
     });
   }
 }

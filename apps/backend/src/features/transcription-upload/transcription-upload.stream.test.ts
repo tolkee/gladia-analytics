@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { TranscriptionImportProcessingError } from "./transcription-import.processing";
-import { streamTranscriptionItems } from "./transcription-import.stream";
+import { TranscriptionUploadProcessingError } from "./transcription-upload.processing";
+import { streamTranscriptionItems } from "./transcription-upload.stream";
 
 const encoder = new TextEncoder();
 
@@ -36,7 +36,7 @@ describe("streamTranscriptionItems", () => {
   ])("rejects %s", async (_scenario, document) => {
     await expect(collect(streamTranscriptionItems(streamChunks([document])))).rejects.toMatchObject(
       {
-        details: { code: "INVALID_IMPORT_FORMAT" },
+        details: { code: "INVALID_UPLOAD_FORMAT" },
       },
     );
   });
@@ -53,8 +53,8 @@ describe("streamTranscriptionItems", () => {
       await collect(streamTranscriptionItems(input));
       throw new Error("Expected the stream to fail");
     } catch (error) {
-      expect(error).toBeInstanceOf(TranscriptionImportProcessingError);
-      expect((error as TranscriptionImportProcessingError).details.code).toBe(
+      expect(error).toBeInstanceOf(TranscriptionUploadProcessingError);
+      expect((error as TranscriptionUploadProcessingError).details.code).toBe(
         "STORAGE_READ_FAILED",
       );
     }

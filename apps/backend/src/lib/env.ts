@@ -26,7 +26,7 @@ const envSchema = z.object({
   S3_BUCKET: z.string().min(1),
   S3_ACCESS_KEY_ID: z.string().min(1),
   S3_SECRET_ACCESS_KEY: z.string().min(1),
-  TRANSCRIPTION_IMPORT_WORKER_POLL_INTERVAL_MS: z.coerce
+  TRANSCRIPTION_UPLOAD_WORKER_POLL_INTERVAL_MS: z.coerce
     .number()
     .int()
     .positive()
