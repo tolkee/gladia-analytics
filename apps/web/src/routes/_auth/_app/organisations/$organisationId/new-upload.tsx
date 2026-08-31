@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 
-export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/upload-file")({
+export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/new-upload")({
   beforeLoad: ({ context, params }) => {
     if (context.organisation.role === "viewer") {
       throw redirect({
@@ -65,11 +65,10 @@ function UploadFilePage() {
     <main className="min-h-[calc(100svh-var(--header-height))] px-4 py-10 sm:px-6">
       <section className="mx-auto w-full max-w-3xl">
         <div className="mb-8">
-          <p className="text-sm font-medium text-muted-foreground">New upload</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Upload transcription data</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Upload transcription data</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Choose a JSON export containing an <code>items</code> array. The file is uploaded as a
-            stream and processed in the background.
+            Choose a JSON file. It must contain a top-level <code>items</code> array, and every item
+            must be a valid Gladia transcription.
           </p>
         </div>
 

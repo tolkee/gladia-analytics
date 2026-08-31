@@ -9,7 +9,7 @@ import {
 } from "@gladia-analytics/ui/components/breadcrumb";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { SidebarTrigger } from "@gladia-analytics/ui/components/sidebar";
-import { FileUploadIcon } from "@hugeicons/core-free-icons";
+import { Upload01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -51,18 +51,17 @@ export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
         <div className="ml-auto flex items-center gap-1">
           {organisation.role !== "viewer" ? (
             <Button
-              variant="outline"
               size="sm"
               nativeButton={false}
               aria-label="Upload file"
               render={
                 <Link
-                  to="/organisations/$organisationId/upload-file"
+                  to="/organisations/$organisationId/new-upload"
                   params={{ organisationId: organisation.id }}
                 />
               }
             >
-              <HugeiconsIcon icon={FileUploadIcon} data-icon="inline-start" strokeWidth={2} />
+              <HugeiconsIcon icon={Upload01Icon} data-icon="inline-start" strokeWidth={2} />
               <span className="hidden sm:inline">Upload file</span>
             </Button>
           ) : null}
@@ -75,7 +74,7 @@ export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
 
 function getPageName(pathname: string) {
   if (pathname.endsWith("/transcriptions")) return "Transcriptions";
-  if (pathname.endsWith("/upload-file")) return "Upload file";
+  if (pathname.endsWith("/new-upload")) return "New upload";
   if (pathname.endsWith("/uploads")) return "Uploads";
   return "Analytics";
 }

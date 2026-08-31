@@ -79,9 +79,9 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
       return;
     }
 
-    if (pathname.endsWith("/upload-file")) {
+    if (pathname.endsWith("/new-upload")) {
       void navigate({
-        to: "/organisations/$organisationId/upload-file",
+        to: "/organisations/$organisationId/new-upload",
         params: { organisationId },
       });
       return;

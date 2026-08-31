@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/_app/upload-file")({
+export const Route = createFileRoute("/_auth/_app/new-upload")({
   beforeLoad: ({ context }) => {
     const organisation = context.organisations.find(
       (availableOrganisation) => availableOrganisation.role !== "viewer",
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_auth/_app/upload-file")({
     }
 
     throw redirect({
-      to: "/organisations/$organisationId/upload-file",
+      to: "/organisations/$organisationId/new-upload",
       params: { organisationId: organisation.id },
     });
   },
