@@ -16,9 +16,8 @@ import {
 export const transcriptionKinds = ["live", "pre-recorded"] as const;
 export const transcriptionKindEnum = pgEnum("transcription_kind", transcriptionKinds);
 
-export const transcriptionsTable = pgTable(
-  "transcriptions",
-  {
+function createTranscriptionColumns() {
+  return {
     organisationId: uuid("organisation_id")
       .notNull()
       .references(() => organisationsTable.id, { onDelete: "cascade" }),
@@ -50,7 +49,12 @@ export const transcriptionsTable = pgTable(
     resultTranscriptionTime: doublePrecision("result_transcription_time"),
 
     billableSeconds: doublePrecision("billable_seconds").notNull(),
-  },
+  };
+}
+
+export const transcriptionsTable = pgTable(
+  "transcriptions",
+  createTranscriptionColumns(),
   (table) => [
     primaryKey({
       columns: [table.organisationId, table.id],
@@ -64,4 +68,19 @@ export const transcriptionsTable = pgTable(
   ],
 );
 
+export const stagedTranscriptionsTable = pgTable(
+  "staged_transcriptions",
+  {
+    importId: uuid("import_id").notNull(),
+    ...createTranscriptionColumns(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.importId, table.organisationId, table.id],
+      name: "staged_transcriptions_import_id_organisation_id_id_pk",
+    }),
+  ],
+);
+
 export type Transcription = typeof transcriptionsTable.$inferSelect;
+export type StagedTranscription = typeof stagedTranscriptionsTable.$inferSelect;

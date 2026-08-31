@@ -6,12 +6,11 @@ import {
   encodePaginationCursor,
   type CursorPaginationQuery,
 } from "#lib/pagination";
-import { and, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
 import type {
   AnalyticsLanguageMode,
   AnalyticsTimeRange,
-  CreateTranscriptionsInput,
-  RemoveTranscriptionsInput,
+  TranscriptionSource,
 } from "./transcription.dto";
 import { transcriptionCursorSchema } from "./transcription.dto";
 import { TranscriptionNotFoundError } from "./errors";
@@ -25,7 +24,37 @@ import {
   toNumber,
   toTranscriptionInsert,
 } from "./utils";
-import { transcriptionsTable, type Transcription } from "./transcription.schema";
+import {
+  stagedTranscriptionsTable,
+  transcriptionsTable,
+  type StagedTranscription,
+  type Transcription,
+} from "./transcription.schema";
+
+const transcriptionConflictUpdateSet = {
+  requestId: excluded("request_id"),
+  version: excluded("version"),
+  status: excluded("status"),
+  createdAt: excluded("created_at"),
+  completedAt: excluded("completed_at"),
+  customMetadata: excluded("custom_metadata"),
+  errorCode: excluded("error_code"),
+  kind: excluded("kind"),
+  fileId: excluded("file_id"),
+  fileName: excluded("file_name"),
+  fileSource: excluded("file_source"),
+  fileAudioDuration: excluded("file_audio_duration"),
+  fileNumberOfChannels: excluded("file_number_of_channels"),
+  model: excluded("model"),
+  detectLanguage: excluded("detect_language"),
+  languages: excluded("languages"),
+  codeSwitching: excluded("code_switching"),
+  resultAudioDuration: excluded("result_audio_duration"),
+  resultNumberOfDistinctChannels: excluded("result_number_of_distinct_channels"),
+  resultBillingTime: excluded("result_billing_time"),
+  resultTranscriptionTime: excluded("result_transcription_time"),
+  billableSeconds: excluded("billable_seconds"),
+};
 
 export class TranscriptionService {
   constructor(
@@ -299,80 +328,134 @@ export class TranscriptionService {
     return transcription;
   }
 
-  async createTranscriptions(
-    userId: User["id"],
+  async addStagedTranscriptions(
+    importId: StagedTranscription["importId"],
     organisationId: Organisation["id"],
-    input: CreateTranscriptionsInput,
+    items: TranscriptionSource[],
   ) {
-    await this.organisationService.isInOrganisation(userId, organisationId, "admin");
+    const transcriptionsById = new Map<
+      Transcription["id"],
+      typeof stagedTranscriptionsTable.$inferInsert
+    >();
 
-    const transcriptionsById = new Map(
-      input.items.map((item) => [item.id, toTranscriptionInsert(organisationId, item)]),
-    );
+    for (const item of items) {
+      const transcription = { importId, ...toTranscriptionInsert(organisationId, item) };
+      const current = transcriptionsById.get(item.id);
+
+      if (!current || current.version <= transcription.version) {
+        transcriptionsById.set(item.id, transcription);
+      }
+    }
+
     const values = [...transcriptionsById.values()];
+    let stagedCount = 0;
 
     if (values.length > 0) {
       await this.db.transaction(async (tx) => {
         for (let start = 0; start < values.length; start += INSERT_CHUNK_SIZE) {
-          await tx
-            .insert(transcriptionsTable)
+          const staged = await tx
+            .insert(stagedTranscriptionsTable)
             .values(values.slice(start, start + INSERT_CHUNK_SIZE))
             .onConflictDoUpdate({
-              target: [transcriptionsTable.organisationId, transcriptionsTable.id],
-              set: {
-                requestId: excluded("request_id"),
-                version: excluded("version"),
-                status: excluded("status"),
-                createdAt: excluded("created_at"),
-                completedAt: excluded("completed_at"),
-                customMetadata: excluded("custom_metadata"),
-                errorCode: excluded("error_code"),
-                kind: excluded("kind"),
-                fileId: excluded("file_id"),
-                fileName: excluded("file_name"),
-                fileSource: excluded("file_source"),
-                fileAudioDuration: excluded("file_audio_duration"),
-                fileNumberOfChannels: excluded("file_number_of_channels"),
-                model: excluded("model"),
-                detectLanguage: excluded("detect_language"),
-                languages: excluded("languages"),
-                codeSwitching: excluded("code_switching"),
-                resultAudioDuration: excluded("result_audio_duration"),
-                resultNumberOfDistinctChannels: excluded("result_number_of_distinct_channels"),
-                resultBillingTime: excluded("result_billing_time"),
-                resultTranscriptionTime: excluded("result_transcription_time"),
-                billableSeconds: excluded("billable_seconds"),
-              },
-            });
+              target: [
+                stagedTranscriptionsTable.importId,
+                stagedTranscriptionsTable.organisationId,
+                stagedTranscriptionsTable.id,
+              ],
+              set: transcriptionConflictUpdateSet,
+              setWhere: lte(stagedTranscriptionsTable.version, excluded("version")),
+            })
+            .returning({ id: stagedTranscriptionsTable.id });
+
+          stagedCount += staged.length;
         }
       });
     }
 
     return {
-      receivedCount: input.items.length,
-      upsertedCount: values.length,
+      receivedCount: items.length,
+      stagedCount,
     };
   }
 
-  async removeTranscriptions(
-    userId: User["id"],
+  async removeStagedTranscriptions(
+    importId: StagedTranscription["importId"],
     organisationId: Organisation["id"],
-    input: RemoveTranscriptionsInput,
   ) {
-    await this.organisationService.isInOrganisation(userId, organisationId, "admin");
-
-    if (input.ids.length === 0) return 0;
-
     const removed = await this.db
-      .delete(transcriptionsTable)
+      .delete(stagedTranscriptionsTable)
       .where(
         and(
-          eq(transcriptionsTable.organisationId, organisationId),
-          inArray(transcriptionsTable.id, input.ids),
+          eq(stagedTranscriptionsTable.importId, importId),
+          eq(stagedTranscriptionsTable.organisationId, organisationId),
         ),
       )
-      .returning({ id: transcriptionsTable.id });
+      .returning({ id: stagedTranscriptionsTable.id });
 
     return removed.length;
+  }
+
+  async mergeStagedTranscriptions(
+    importId: StagedTranscription["importId"],
+    organisationId: Organisation["id"],
+  ) {
+    return this.db.transaction(async (tx) => {
+      const stagedTranscriptions = tx
+        .select({
+          organisationId: stagedTranscriptionsTable.organisationId,
+          id: stagedTranscriptionsTable.id,
+          requestId: stagedTranscriptionsTable.requestId,
+          version: stagedTranscriptionsTable.version,
+          status: stagedTranscriptionsTable.status,
+          createdAt: stagedTranscriptionsTable.createdAt,
+          completedAt: stagedTranscriptionsTable.completedAt,
+          customMetadata: stagedTranscriptionsTable.customMetadata,
+          errorCode: stagedTranscriptionsTable.errorCode,
+          kind: stagedTranscriptionsTable.kind,
+          fileId: stagedTranscriptionsTable.fileId,
+          fileName: stagedTranscriptionsTable.fileName,
+          fileSource: stagedTranscriptionsTable.fileSource,
+          fileAudioDuration: stagedTranscriptionsTable.fileAudioDuration,
+          fileNumberOfChannels: stagedTranscriptionsTable.fileNumberOfChannels,
+          model: stagedTranscriptionsTable.model,
+          detectLanguage: stagedTranscriptionsTable.detectLanguage,
+          languages: stagedTranscriptionsTable.languages,
+          codeSwitching: stagedTranscriptionsTable.codeSwitching,
+          resultAudioDuration: stagedTranscriptionsTable.resultAudioDuration,
+          resultNumberOfDistinctChannels: stagedTranscriptionsTable.resultNumberOfDistinctChannels,
+          resultBillingTime: stagedTranscriptionsTable.resultBillingTime,
+          resultTranscriptionTime: stagedTranscriptionsTable.resultTranscriptionTime,
+          billableSeconds: stagedTranscriptionsTable.billableSeconds,
+        })
+        .from(stagedTranscriptionsTable)
+        .where(
+          and(
+            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.organisationId, organisationId),
+          ),
+        );
+
+      const merged = await tx
+        .insert(transcriptionsTable)
+        .select(stagedTranscriptions)
+        .onConflictDoUpdate({
+          target: [transcriptionsTable.organisationId, transcriptionsTable.id],
+          set: transcriptionConflictUpdateSet,
+          setWhere: lte(transcriptionsTable.version, excluded("version")),
+        })
+        .returning({ id: transcriptionsTable.id });
+
+      const removed = await tx
+        .delete(stagedTranscriptionsTable)
+        .where(
+          and(
+            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.organisationId, organisationId),
+          ),
+        )
+        .returning({ id: stagedTranscriptionsTable.id });
+
+      return { mergedCount: merged.length, removedCount: removed.length };
+    });
   }
 }

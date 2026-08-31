@@ -51,12 +51,6 @@ export const transcriptionSourceSchema = z.object({
 
 export type TranscriptionSource = z.infer<typeof transcriptionSourceSchema>;
 
-export const createTranscriptionsSchema = z.object({
-  items: z.array(transcriptionSourceSchema),
-});
-
-export type CreateTranscriptionsInput = z.infer<typeof createTranscriptionsSchema>;
-
 export const analyticsIntervals = ["hour", "day", "week", "month"] as const;
 export const analyticsIntervalSchema = z.enum(analyticsIntervals);
 export type AnalyticsInterval = z.infer<typeof analyticsIntervalSchema>;
@@ -97,15 +91,6 @@ export const transcriptionCursorSchema = z.object({
   createdAt: sourceTimestampSchema,
   id: z.uuid(),
 });
-
-export const removeTranscriptionsSchema = z.object({
-  ids: z
-    .array(z.uuid())
-    .min(1)
-    .transform((ids) => [...new Set(ids)]),
-});
-
-export type RemoveTranscriptionsInput = z.infer<typeof removeTranscriptionsSchema>;
 
 export type AnalyticsLanguageMode = "auto-detect" | "single-language" | "multiple-languages";
 
