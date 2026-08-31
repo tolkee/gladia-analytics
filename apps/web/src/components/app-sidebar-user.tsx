@@ -4,10 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@gladia-analytics/ui/compon
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@gladia-analytics/ui/components/dropdown-menu";
 import {
@@ -82,14 +79,6 @@ export function AppSidebarUser() {
               sideOffset={4}
               className="min-w-56"
             >
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="p-1.5 font-normal">
-                  <div className="flex items-center gap-2">
-                    <UserIdentity name={user.name} email={user.email} image={user.image} />
-                  </div>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout}>
                 <HugeiconsIcon icon={Logout02Icon} strokeWidth={2} />
                 Log out
