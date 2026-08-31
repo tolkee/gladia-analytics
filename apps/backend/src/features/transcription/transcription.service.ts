@@ -27,7 +27,6 @@ import {
   round,
   toNumber,
   toTranscriptionInsert,
-  transcriptionListSelection,
   transcriptionUpsertSet,
 } from "./transcription.helpers";
 import { transcriptionsTable, type Transcription } from "./transcription.schema";
@@ -242,7 +241,21 @@ export class TranscriptionService {
       : undefined;
 
     const rows = await this.db
-      .select(transcriptionListSelection)
+      .select({
+        id: transcriptionsTable.id,
+        requestId: transcriptionsTable.requestId,
+        version: transcriptionsTable.version,
+        status: transcriptionsTable.status,
+        createdAt: transcriptionsTable.createdAt,
+        completedAt: transcriptionsTable.completedAt,
+        errorCode: transcriptionsTable.errorCode,
+        kind: transcriptionsTable.kind,
+        fileName: transcriptionsTable.fileName,
+        fileAudioDuration: transcriptionsTable.fileAudioDuration,
+        model: transcriptionsTable.model,
+        languages: transcriptionsTable.languages,
+        billableSeconds: transcriptionsTable.billableSeconds,
+      })
       .from(transcriptionsTable)
       .where(and(eq(transcriptionsTable.organisationId, organisationId), cursorFilter))
       .orderBy(desc(transcriptionsTable.createdAt), desc(transcriptionsTable.id))
@@ -275,7 +288,32 @@ export class TranscriptionService {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
     const [transcription] = await this.db
-      .select()
+      .select({
+        organisationId: transcriptionsTable.organisationId,
+        id: transcriptionsTable.id,
+        requestId: transcriptionsTable.requestId,
+        version: transcriptionsTable.version,
+        status: transcriptionsTable.status,
+        createdAt: transcriptionsTable.createdAt,
+        completedAt: transcriptionsTable.completedAt,
+        customMetadata: transcriptionsTable.customMetadata,
+        errorCode: transcriptionsTable.errorCode,
+        kind: transcriptionsTable.kind,
+        fileId: transcriptionsTable.fileId,
+        fileName: transcriptionsTable.fileName,
+        fileSource: transcriptionsTable.fileSource,
+        fileAudioDuration: transcriptionsTable.fileAudioDuration,
+        fileNumberOfChannels: transcriptionsTable.fileNumberOfChannels,
+        model: transcriptionsTable.model,
+        detectLanguage: transcriptionsTable.detectLanguage,
+        languages: transcriptionsTable.languages,
+        codeSwitching: transcriptionsTable.codeSwitching,
+        resultAudioDuration: transcriptionsTable.resultAudioDuration,
+        resultNumberOfDistinctChannels: transcriptionsTable.resultNumberOfDistinctChannels,
+        resultBillingTime: transcriptionsTable.resultBillingTime,
+        resultTranscriptionTime: transcriptionsTable.resultTranscriptionTime,
+        billableSeconds: transcriptionsTable.billableSeconds,
+      })
       .from(transcriptionsTable)
       .where(
         and(

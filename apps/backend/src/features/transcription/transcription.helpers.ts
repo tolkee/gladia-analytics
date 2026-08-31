@@ -13,22 +13,6 @@ export const REALTIME_HOURLY_RATE_USD = 0.2;
 export const ASYNC_HOURLY_RATE_USD = 0.12;
 export const INSERT_CHUNK_SIZE = 500;
 
-export const transcriptionListSelection = {
-  id: transcriptionsTable.id,
-  requestId: transcriptionsTable.requestId,
-  version: transcriptionsTable.version,
-  status: transcriptionsTable.status,
-  createdAt: transcriptionsTable.createdAt,
-  completedAt: transcriptionsTable.completedAt,
-  errorCode: transcriptionsTable.errorCode,
-  kind: transcriptionsTable.kind,
-  fileName: transcriptionsTable.fileName,
-  fileAudioDuration: transcriptionsTable.fileAudioDuration,
-  model: transcriptionsTable.model,
-  languages: transcriptionsTable.languages,
-  billableSeconds: transcriptionsTable.billableSeconds,
-};
-
 export const transcriptionUpsertSet = {
   requestId: excluded("request_id"),
   version: excluded("version"),
