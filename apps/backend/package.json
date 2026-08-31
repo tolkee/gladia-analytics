@@ -3,6 +3,7 @@
   "private": true,
   "imports": {
     "#features/*": "./src/features/*/index.ts",
+    "#schemas/*": "./src/features/*/*.schema.ts",
     "#lib/*": "./src/lib/*.ts"
   },
   "exports": {

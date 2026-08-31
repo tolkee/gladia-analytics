@@ -1,4 +1,4 @@
-import { usersTable } from "#features/auth";
+import { usersTable } from "#schemas/auth";
 import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const todosTable = pgTable(

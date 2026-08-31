@@ -10,9 +10,11 @@ import { cors } from "hono/cors";
 import { env } from "#lib/env";
 import { apiError } from "#lib/errors";
 import type { ApplyGlobalResponse } from "hono/client";
+import { createOrganisationRoutes } from "./organisation.routes";
 
 export function createApi(services: Services) {
   const todoRoutes = createTodoRoutes(services.todoService);
+  const organisationRoutes = createOrganisationRoutes(services.organisationService);
 
   return new Hono()
     .use(requestId())
@@ -26,6 +28,7 @@ export function createApi(services: Services) {
     .use(authContextMiddleware)
     .all("/api/auth/*", (ctx) => auth.handler(ctx.req.raw))
     .route("api/todo", todoRoutes)
+    .route("/api/organisations", organisationRoutes)
     .get("/api/health", (ctx) => {
       return ctx.json({ status: "ok" });
     })
