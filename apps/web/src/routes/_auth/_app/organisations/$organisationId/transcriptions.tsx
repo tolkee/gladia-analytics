@@ -1,7 +1,12 @@
 import {
+  PeriodPicker,
   TranscriptionDetailDrawer,
   TranscriptionsDataTable,
+  getPeriodRange,
   listTranscriptionsQuery,
+  periodSearchSchema,
+  periodSelectionFromSearch,
+  type PeriodSelection,
 } from "#features/transcriptions";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { Skeleton } from "@gladia-analytics/ui/components/skeleton";
@@ -12,15 +17,26 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import * as z from "zod";
 
-const transcriptionsSearchSchema = z.object({
-  transcriptionId: z.uuid().optional(),
-});
+const transcriptionsSearchSchema = periodSearchSchema.and(
+  z.object({
+    transcriptionId: z.uuid().optional(),
+  }),
+);
 
 export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/transcriptions")({
   validateSearch: transcriptionsSearchSchema,
-  loader: async ({ context, params }) => {
+  loaderDeps: ({ search }) => {
+    const selection = periodSelectionFromSearch(search);
+    return { selection, range: getPeriodRange(selection) };
+  },
+  loader: async ({ context, deps, params }) => {
     await context.queryClient.fetchInfiniteQuery(
-      listTranscriptionsQuery.options(context.user.id, params.organisationId),
+      listTranscriptionsQuery.options(
+        context.user.id,
+        params.organisationId,
+        deps.selection,
+        deps.range,
+      ),
     );
   },
   pendingComponent: TranscriptionsPageSkeleton,
@@ -30,9 +46,10 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
 function TranscriptionsPage() {
   const { organisation, user } = Route.useRouteContext();
   const { transcriptionId } = Route.useSearch();
+  const { range, selection } = Route.useLoaderDeps();
   const navigate = Route.useNavigate();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(
-    listTranscriptionsQuery.options(user.id, organisation.id),
+    listTranscriptionsQuery.options(user.id, organisation.id, selection, range),
   );
   const transcriptions = useMemo(() => data.pages.flatMap((page) => page.data), [data.pages]);
 
@@ -50,6 +67,15 @@ function TranscriptionsPage() {
     });
   }
 
+  function selectPeriod(nextSelection: PeriodSelection) {
+    void navigate({
+      search:
+        nextSelection.type === "preset"
+          ? { period: nextSelection.period }
+          : { from: nextSelection.from, to: nextSelection.to },
+    });
+  }
+
   return (
     <section className="flex h-[calc(100svh-var(--header-height))] min-h-0 flex-col gap-3 p-4">
       <div
@@ -62,9 +88,12 @@ function TranscriptionsPage() {
           Add filters
         </Button>
 
-        <Button type="button" variant="outline" size="sm" className="ml-auto" disabled>
-          Period
-        </Button>
+        <PeriodPicker
+          value={selection}
+          onValueChange={selectPeriod}
+          size="sm"
+          className="ml-auto"
+        />
       </div>
 
       <TranscriptionsDataTable

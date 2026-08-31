@@ -1,12 +1,13 @@
 import { organisationParamsSchema } from "#features/organisation";
 import {
   analyticsTimeRangeSchema,
+  transcriptionsQuerySchema,
   TranscriptionNotFoundError,
   transcriptionParamsSchema,
   type TranscriptionService,
 } from "#features/transcription";
 import { apiError } from "#lib/errors";
-import { cursorPaginationQuerySchema, InvalidPaginationCursorError } from "#lib/pagination";
+import { InvalidPaginationCursorError } from "#lib/pagination";
 import { ApiErrorCode } from "@gladia-analytics/common/errors";
 import { Hono, type Context } from "hono";
 import { authGuardMiddleware } from "./middlewares/auth-guard";
@@ -39,7 +40,7 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
       "/:organisationId/transcriptions",
       authGuardMiddleware,
       requestValidator("param", organisationParamsSchema),
-      requestValidator("query", cursorPaginationQuerySchema),
+      requestValidator("query", transcriptionsQuerySchema),
       async (ctx) => {
         try {
           const transcriptions = await transcriptionService.getTranscriptions(

@@ -1,8 +1,4 @@
-import {
-  analyticsPeriods,
-  type AnalyticsPeriod,
-  type AnalyticsSelection,
-} from "../../api/get-transcription-analytics.query";
+import { periods, type Period, type PeriodSelection } from "../period";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { Calendar } from "@gladia-analytics/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@gladia-analytics/ui/components/popover";
@@ -16,9 +12,9 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 
-const periodDetails: Record<AnalyticsPeriod, { label: string; shortLabel: string }> = {
+const periodDetails: Record<Period, { label: string; shortLabel: string }> = {
   "24h": { label: "Last 24 hours", shortLabel: "24 hours" },
   "7d": { label: "Last 7 days", shortLabel: "7 days" },
   "30d": { label: "Last 30 days", shortLabel: "30 days" },
@@ -40,17 +36,14 @@ type CalendarDateRange = {
   to?: Date | undefined;
 };
 
-type AnalyticsPeriodPickerProps = {
-  value: AnalyticsSelection;
-  onValueChange: (value: AnalyticsSelection) => void;
+type PeriodPickerProps = {
+  value: PeriodSelection;
+  onValueChange: (value: PeriodSelection) => void;
+  size?: ComponentProps<typeof Button>["size"];
   className?: string;
 };
 
-export function AnalyticsPeriodPicker({
-  value,
-  onValueChange,
-  className,
-}: AnalyticsPeriodPickerProps) {
+export function PeriodPicker({ value, onValueChange, size, className }: PeriodPickerProps) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"quick" | "calendar">(
     value.type === "custom" ? "calendar" : "quick",
@@ -68,7 +61,7 @@ export function AnalyticsPeriodPicker({
     }
   }
 
-  function selectPreset(period: AnalyticsPeriod) {
+  function selectPreset(period: Period) {
     onValueChange({ type: "preset", period });
     setOpen(false);
   }
@@ -91,12 +84,13 @@ export function AnalyticsPeriodPicker({
           <Button
             type="button"
             variant="outline"
+            size={size}
             className={cn("w-full justify-between sm:w-auto", className)}
           />
         }
       >
         <HugeiconsIcon icon={Calendar03Icon} data-icon="inline-start" strokeWidth={2} />
-        {formatAnalyticsSelectionLabel(value)}
+        {formatPeriodSelectionLabel(value)}
         <HugeiconsIcon icon={ArrowDown01Icon} data-icon="inline-end" strokeWidth={2} />
       </PopoverTrigger>
 
@@ -118,7 +112,7 @@ export function AnalyticsPeriodPicker({
 
           <TabsContent value="quick" className="p-2">
             <div className="grid gap-1 sm:grid-cols-2">
-              {analyticsPeriods.map((period) => {
+              {periods.map((period) => {
                 const selected = value.type === "preset" && value.period === period;
 
                 return (
@@ -180,7 +174,7 @@ export function AnalyticsPeriodPicker({
   );
 }
 
-export function formatAnalyticsSelectionLabel(selection: AnalyticsSelection): string {
+export function formatPeriodSelectionLabel(selection: PeriodSelection): string {
   if (selection.type === "preset") {
     return periodDetails[selection.period].label;
   }
@@ -195,15 +189,15 @@ export function formatAnalyticsSelectionLabel(selection: AnalyticsSelection): st
   return `${calendarDateFormatter.format(from)} – ${calendarDateFormatter.format(to)}`;
 }
 
-export function formatAnalyticsSelectionShortLabel(selection: AnalyticsSelection): string {
+export function formatPeriodSelectionShortLabel(selection: PeriodSelection): string {
   if (selection.type === "preset") {
     return periodDetails[selection.period].shortLabel;
   }
 
-  return formatAnalyticsSelectionLabel(selection);
+  return formatPeriodSelectionLabel(selection);
 }
 
-function calendarRangeFromSelection(selection: AnalyticsSelection): CalendarDateRange {
+function calendarRangeFromSelection(selection: PeriodSelection): CalendarDateRange {
   if (selection.type === "custom") {
     return {
       from: dateFromCalendarValue(selection.from),
