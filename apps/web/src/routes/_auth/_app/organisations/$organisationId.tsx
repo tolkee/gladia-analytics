@@ -24,7 +24,7 @@ function OrganisationAppLayout() {
   return (
     <SidebarProvider>
       <AppSidebar organisations={organisations} organisation={organisation} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <AppSiteHeader organisation={organisation} />
         <Outlet />
       </SidebarInset>

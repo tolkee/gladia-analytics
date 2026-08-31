@@ -21,6 +21,17 @@ const envSchema = z.object({
   AUTH_DOMAIN: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
+  S3_ENDPOINT: z.url(),
+  S3_REGION: z.string().min(1),
+  S3_BUCKET: z.string().min(1),
+  S3_ACCESS_KEY_ID: z.string().min(1),
+  S3_SECRET_ACCESS_KEY: z.string().min(1),
+  TRANSCRIPTION_UPLOAD_WORKER_POLL_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .default(1_000),
 });
 export type Env = z.infer<typeof envSchema>;
 

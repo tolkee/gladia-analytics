@@ -1,8 +1,19 @@
-import { defineRailway, github, group, postgres, preserve, project, service } from "railway/iac";
+import {
+  bucket,
+  defineRailway,
+  github,
+  group,
+  postgres,
+  preserve,
+  project,
+  ref,
+  service,
+} from "railway/iac";
 
 export default defineRailway((ctx) => {
   const production = ctx.environment === "production";
   const database = postgres("Postgres");
+  const uploadsBucket = bucket("transcription-uploads", { region: "ams" });
 
   const backend = service("backend", {
     source: github("tolkee/gladia-analytics", { branch: "main", checkSuites: true }),
@@ -35,10 +46,15 @@ export default defineRailway((ctx) => {
       BETTER_AUTH_SECRET: preserve(),
       GOOGLE_CLIENT_ID: preserve(),
       GOOGLE_CLIENT_SECRET: preserve(),
+      S3_ENDPOINT: ref(uploadsBucket, "ENDPOINT"),
+      S3_REGION: ref(uploadsBucket, "REGION"),
+      S3_BUCKET: ref(uploadsBucket, "BUCKET"),
+      S3_ACCESS_KEY_ID: ref(uploadsBucket, "ACCESS_KEY_ID"),
+      S3_SECRET_ACCESS_KEY: ref(uploadsBucket, "SECRET_ACCESS_KEY"),
     },
   });
 
   return project("gladia-analytics", {
-    resources: [group("Backend", [backend, database])],
+    resources: [group("Backend", [backend, database, uploadsBucket])],
   });
 });

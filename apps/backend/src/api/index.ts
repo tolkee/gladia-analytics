@@ -11,6 +11,7 @@ import { env } from "#lib/env";
 import { apiError } from "#lib/errors";
 import type { ApplyGlobalResponse } from "hono/client";
 import { createOrganisationRoutes } from "./organisation.routes";
+import { createTranscriptionUploadRoutes } from "./transcription-upload.routes";
 import { createTranscriptionRoutes } from "./transcription.routes";
 import type { ApiEnv } from "./types";
 
@@ -18,6 +19,9 @@ export function createApi(services: Services) {
   const todoRoutes = createTodoRoutes(services.todoService);
   const organisationRoutes = createOrganisationRoutes(services.organisationService);
   const transcriptionRoutes = createTranscriptionRoutes(services.transcriptionService);
+  const transcriptionUploadRoutes = createTranscriptionUploadRoutes(
+    services.transcriptionUploadService,
+  );
 
   return new Hono<ApiEnv>()
     .use(requestId())
@@ -33,6 +37,7 @@ export function createApi(services: Services) {
     .route("api/todo", todoRoutes)
     .route("/api/organisations", organisationRoutes)
     .route("/api/organisations", transcriptionRoutes)
+    .route("/api/organisations", transcriptionUploadRoutes)
     .get("/api/health", (ctx) => {
       return ctx.json({ status: "ok" });
     })

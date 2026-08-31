@@ -3,6 +3,7 @@ import {
   Analytics02Icon,
   ArrowDown01Icon,
   Building02Icon,
+  CloudUploadIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -40,6 +41,12 @@ const navigation = [
     pathSuffix: "/transcriptions",
     icon: AiTranscribeAudioIcon,
   },
+  {
+    label: "Uploads",
+    to: "/organisations/$organisationId/uploads" as const,
+    pathSuffix: "/uploads",
+    icon: CloudUploadIcon,
+  },
 ];
 
 type AppSidebarProps = {
@@ -59,6 +66,22 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
     if (pathname.endsWith("/transcriptions")) {
       void navigate({
         to: "/organisations/$organisationId/transcriptions",
+        params: { organisationId },
+      });
+      return;
+    }
+
+    if (pathname.endsWith("/uploads")) {
+      void navigate({
+        to: "/organisations/$organisationId/uploads",
+        params: { organisationId },
+      });
+      return;
+    }
+
+    if (pathname.endsWith("/new-upload")) {
+      void navigate({
+        to: "/organisations/$organisationId/new-upload",
         params: { organisationId },
       });
       return;

@@ -15,11 +15,15 @@ import { Route as AuthAppRouteImport } from './routes/_auth/_app'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth/onboarding'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/_app/index'
 import { Route as AuthAppAnalyticsRouteImport } from './routes/_auth/_app/analytics'
+import { Route as AuthAppNewUploadRouteImport } from './routes/_auth/_app/new-upload'
 import { Route as AuthAppTranscriptionsRouteImport } from './routes/_auth/_app/transcriptions'
+import { Route as AuthAppUploadsRouteImport } from './routes/_auth/_app/uploads'
 import { Route as AuthAppOrganisationsOrganisationIdRouteImport } from './routes/_auth/_app/organisations/$organisationId'
 import { Route as AuthAppOrganisationsOrganisationIdIndexRouteImport } from './routes/_auth/_app/organisations/$organisationId/index'
 import { Route as AuthAppOrganisationsOrganisationIdAnalyticsRouteImport } from './routes/_auth/_app/organisations/$organisationId/analytics'
+import { Route as AuthAppOrganisationsOrganisationIdNewUploadRouteImport } from './routes/_auth/_app/organisations/$organisationId/new-upload'
 import { Route as AuthAppOrganisationsOrganisationIdTranscriptionsRouteImport } from './routes/_auth/_app/organisations/$organisationId/transcriptions'
+import { Route as AuthAppOrganisationsOrganisationIdUploadsRouteImport } from './routes/_auth/_app/organisations/$organisationId/uploads'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -49,9 +53,19 @@ const AuthAppAnalyticsRoute = AuthAppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthAppRoute,
 } as any)
+const AuthAppNewUploadRoute = AuthAppNewUploadRouteImport.update({
+  id: '/new-upload',
+  path: '/new-upload',
+  getParentRoute: () => AuthAppRoute,
+} as any)
 const AuthAppTranscriptionsRoute = AuthAppTranscriptionsRouteImport.update({
   id: '/transcriptions',
   path: '/transcriptions',
+  getParentRoute: () => AuthAppRoute,
+} as any)
+const AuthAppUploadsRoute = AuthAppUploadsRouteImport.update({
+  id: '/uploads',
+  path: '/uploads',
   getParentRoute: () => AuthAppRoute,
 } as any)
 const AuthAppOrganisationsOrganisationIdRoute =
@@ -72,10 +86,22 @@ const AuthAppOrganisationsOrganisationIdAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthAppOrganisationsOrganisationIdRoute,
   } as any)
+const AuthAppOrganisationsOrganisationIdNewUploadRoute =
+  AuthAppOrganisationsOrganisationIdNewUploadRouteImport.update({
+    id: '/new-upload',
+    path: '/new-upload',
+    getParentRoute: () => AuthAppOrganisationsOrganisationIdRoute,
+  } as any)
 const AuthAppOrganisationsOrganisationIdTranscriptionsRoute =
   AuthAppOrganisationsOrganisationIdTranscriptionsRouteImport.update({
     id: '/transcriptions',
     path: '/transcriptions',
+    getParentRoute: () => AuthAppOrganisationsOrganisationIdRoute,
+  } as any)
+const AuthAppOrganisationsOrganisationIdUploadsRoute =
+  AuthAppOrganisationsOrganisationIdUploadsRouteImport.update({
+    id: '/uploads',
+    path: '/uploads',
     getParentRoute: () => AuthAppOrganisationsOrganisationIdRoute,
   } as any)
 
@@ -84,10 +110,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/analytics': typeof AuthAppAnalyticsRoute
+  '/new-upload': typeof AuthAppNewUploadRoute
   '/transcriptions': typeof AuthAppTranscriptionsRoute
+  '/uploads': typeof AuthAppUploadsRoute
   '/organisations/$organisationId': typeof AuthAppOrganisationsOrganisationIdRouteWithChildren
   '/organisations/$organisationId/analytics': typeof AuthAppOrganisationsOrganisationIdAnalyticsRoute
+  '/organisations/$organisationId/new-upload': typeof AuthAppOrganisationsOrganisationIdNewUploadRoute
   '/organisations/$organisationId/transcriptions': typeof AuthAppOrganisationsOrganisationIdTranscriptionsRoute
+  '/organisations/$organisationId/uploads': typeof AuthAppOrganisationsOrganisationIdUploadsRoute
   '/organisations/$organisationId/': typeof AuthAppOrganisationsOrganisationIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -95,9 +125,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/analytics': typeof AuthAppAnalyticsRoute
+  '/new-upload': typeof AuthAppNewUploadRoute
   '/transcriptions': typeof AuthAppTranscriptionsRoute
+  '/uploads': typeof AuthAppUploadsRoute
   '/organisations/$organisationId/analytics': typeof AuthAppOrganisationsOrganisationIdAnalyticsRoute
+  '/organisations/$organisationId/new-upload': typeof AuthAppOrganisationsOrganisationIdNewUploadRoute
   '/organisations/$organisationId/transcriptions': typeof AuthAppOrganisationsOrganisationIdTranscriptionsRoute
+  '/organisations/$organisationId/uploads': typeof AuthAppOrganisationsOrganisationIdUploadsRoute
   '/organisations/$organisationId': typeof AuthAppOrganisationsOrganisationIdIndexRoute
 }
 export interface FileRoutesById {
@@ -107,11 +141,15 @@ export interface FileRoutesById {
   '/_auth/_app': typeof AuthAppRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/_auth/_app/analytics': typeof AuthAppAnalyticsRoute
+  '/_auth/_app/new-upload': typeof AuthAppNewUploadRoute
   '/_auth/_app/transcriptions': typeof AuthAppTranscriptionsRoute
+  '/_auth/_app/uploads': typeof AuthAppUploadsRoute
   '/_auth/_app/': typeof AuthAppIndexRoute
   '/_auth/_app/organisations/$organisationId': typeof AuthAppOrganisationsOrganisationIdRouteWithChildren
   '/_auth/_app/organisations/$organisationId/analytics': typeof AuthAppOrganisationsOrganisationIdAnalyticsRoute
+  '/_auth/_app/organisations/$organisationId/new-upload': typeof AuthAppOrganisationsOrganisationIdNewUploadRoute
   '/_auth/_app/organisations/$organisationId/transcriptions': typeof AuthAppOrganisationsOrganisationIdTranscriptionsRoute
+  '/_auth/_app/organisations/$organisationId/uploads': typeof AuthAppOrganisationsOrganisationIdUploadsRoute
   '/_auth/_app/organisations/$organisationId/': typeof AuthAppOrganisationsOrganisationIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -121,10 +159,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/analytics'
+    | '/new-upload'
     | '/transcriptions'
+    | '/uploads'
     | '/organisations/$organisationId'
     | '/organisations/$organisationId/analytics'
+    | '/organisations/$organisationId/new-upload'
     | '/organisations/$organisationId/transcriptions'
+    | '/organisations/$organisationId/uploads'
     | '/organisations/$organisationId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,9 +174,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/analytics'
+    | '/new-upload'
     | '/transcriptions'
+    | '/uploads'
     | '/organisations/$organisationId/analytics'
+    | '/organisations/$organisationId/new-upload'
     | '/organisations/$organisationId/transcriptions'
+    | '/organisations/$organisationId/uploads'
     | '/organisations/$organisationId'
   id:
     | '__root__'
@@ -143,11 +189,15 @@ export interface FileRouteTypes {
     | '/_auth/_app'
     | '/_auth/onboarding'
     | '/_auth/_app/analytics'
+    | '/_auth/_app/new-upload'
     | '/_auth/_app/transcriptions'
+    | '/_auth/_app/uploads'
     | '/_auth/_app/'
     | '/_auth/_app/organisations/$organisationId'
     | '/_auth/_app/organisations/$organisationId/analytics'
+    | '/_auth/_app/organisations/$organisationId/new-upload'
     | '/_auth/_app/organisations/$organisationId/transcriptions'
+    | '/_auth/_app/organisations/$organisationId/uploads'
     | '/_auth/_app/organisations/$organisationId/'
   fileRoutesById: FileRoutesById
 }
@@ -200,11 +250,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppAnalyticsRouteImport
       parentRoute: typeof AuthAppRoute
     }
+    '/_auth/_app/new-upload': {
+      id: '/_auth/_app/new-upload'
+      path: '/new-upload'
+      fullPath: '/new-upload'
+      preLoaderRoute: typeof AuthAppNewUploadRouteImport
+      parentRoute: typeof AuthAppRoute
+    }
     '/_auth/_app/transcriptions': {
       id: '/_auth/_app/transcriptions'
       path: '/transcriptions'
       fullPath: '/transcriptions'
       preLoaderRoute: typeof AuthAppTranscriptionsRouteImport
+      parentRoute: typeof AuthAppRoute
+    }
+    '/_auth/_app/uploads': {
+      id: '/_auth/_app/uploads'
+      path: '/uploads'
+      fullPath: '/uploads'
+      preLoaderRoute: typeof AuthAppUploadsRouteImport
       parentRoute: typeof AuthAppRoute
     }
     '/_auth/_app/organisations/$organisationId': {
@@ -228,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrganisationsOrganisationIdAnalyticsRouteImport
       parentRoute: typeof AuthAppOrganisationsOrganisationIdRoute
     }
+    '/_auth/_app/organisations/$organisationId/new-upload': {
+      id: '/_auth/_app/organisations/$organisationId/new-upload'
+      path: '/new-upload'
+      fullPath: '/organisations/$organisationId/new-upload'
+      preLoaderRoute: typeof AuthAppOrganisationsOrganisationIdNewUploadRouteImport
+      parentRoute: typeof AuthAppOrganisationsOrganisationIdRoute
+    }
     '/_auth/_app/organisations/$organisationId/transcriptions': {
       id: '/_auth/_app/organisations/$organisationId/transcriptions'
       path: '/transcriptions'
@@ -235,12 +306,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrganisationsOrganisationIdTranscriptionsRouteImport
       parentRoute: typeof AuthAppOrganisationsOrganisationIdRoute
     }
+    '/_auth/_app/organisations/$organisationId/uploads': {
+      id: '/_auth/_app/organisations/$organisationId/uploads'
+      path: '/uploads'
+      fullPath: '/organisations/$organisationId/uploads'
+      preLoaderRoute: typeof AuthAppOrganisationsOrganisationIdUploadsRouteImport
+      parentRoute: typeof AuthAppOrganisationsOrganisationIdRoute
+    }
   }
 }
 
 interface AuthAppOrganisationsOrganisationIdRouteChildren {
   AuthAppOrganisationsOrganisationIdAnalyticsRoute: typeof AuthAppOrganisationsOrganisationIdAnalyticsRoute
+  AuthAppOrganisationsOrganisationIdNewUploadRoute: typeof AuthAppOrganisationsOrganisationIdNewUploadRoute
   AuthAppOrganisationsOrganisationIdTranscriptionsRoute: typeof AuthAppOrganisationsOrganisationIdTranscriptionsRoute
+  AuthAppOrganisationsOrganisationIdUploadsRoute: typeof AuthAppOrganisationsOrganisationIdUploadsRoute
   AuthAppOrganisationsOrganisationIdIndexRoute: typeof AuthAppOrganisationsOrganisationIdIndexRoute
 }
 
@@ -248,8 +328,12 @@ const AuthAppOrganisationsOrganisationIdRouteChildren: AuthAppOrganisationsOrgan
   {
     AuthAppOrganisationsOrganisationIdAnalyticsRoute:
       AuthAppOrganisationsOrganisationIdAnalyticsRoute,
+    AuthAppOrganisationsOrganisationIdNewUploadRoute:
+      AuthAppOrganisationsOrganisationIdNewUploadRoute,
     AuthAppOrganisationsOrganisationIdTranscriptionsRoute:
       AuthAppOrganisationsOrganisationIdTranscriptionsRoute,
+    AuthAppOrganisationsOrganisationIdUploadsRoute:
+      AuthAppOrganisationsOrganisationIdUploadsRoute,
     AuthAppOrganisationsOrganisationIdIndexRoute:
       AuthAppOrganisationsOrganisationIdIndexRoute,
   }
@@ -261,14 +345,18 @@ const AuthAppOrganisationsOrganisationIdRouteWithChildren =
 
 interface AuthAppRouteChildren {
   AuthAppAnalyticsRoute: typeof AuthAppAnalyticsRoute
+  AuthAppNewUploadRoute: typeof AuthAppNewUploadRoute
   AuthAppTranscriptionsRoute: typeof AuthAppTranscriptionsRoute
+  AuthAppUploadsRoute: typeof AuthAppUploadsRoute
   AuthAppIndexRoute: typeof AuthAppIndexRoute
   AuthAppOrganisationsOrganisationIdRoute: typeof AuthAppOrganisationsOrganisationIdRouteWithChildren
 }
 
 const AuthAppRouteChildren: AuthAppRouteChildren = {
   AuthAppAnalyticsRoute: AuthAppAnalyticsRoute,
+  AuthAppNewUploadRoute: AuthAppNewUploadRoute,
   AuthAppTranscriptionsRoute: AuthAppTranscriptionsRoute,
+  AuthAppUploadsRoute: AuthAppUploadsRoute,
   AuthAppIndexRoute: AuthAppIndexRoute,
   AuthAppOrganisationsOrganisationIdRoute:
     AuthAppOrganisationsOrganisationIdRouteWithChildren,

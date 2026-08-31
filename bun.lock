@@ -20,6 +20,7 @@
       "dependencies": {
         "@better-auth/drizzle-adapter": "^1.6.25",
         "@gladia-analytics/common": "workspace:*",
+        "@streamparser/json-whatwg": "^0.0.26",
         "better-auth": "^1.6.25",
         "drizzle-orm": "^0.45.2",
         "hono": "^4.12.33",
@@ -633,6 +634,10 @@
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
     "@standard-schema/utils": ["@standard-schema/utils@0.3.0", "", {}, "sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g=="],
+
+    "@streamparser/json": ["@streamparser/json@0.0.26", "", {}, "sha512-46597LNFI+MFdUnzX2QJWwmdTRdq0XVD+vVNJTtGVzIrnCuhG9pFo1OAzbNBqci8UJgk/X5KJZ6LcV+y7PTuDQ=="],
+
+    "@streamparser/json-whatwg": ["@streamparser/json-whatwg@0.0.26", "", { "dependencies": { "@streamparser/json": "^0.0.26" } }, "sha512-8FkyKZOx50i6aG0O1P87fqQ/zpwPb1Eb3XqUzivWWP0Vdvupy0a0ih6zgkctoL3zkewQe2MkPlNdp+mIRx3Atw=="],
 
     "@stylistic/eslint-plugin": ["@stylistic/eslint-plugin@5.10.0", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.9.1", "@typescript-eslint/types": "^8.56.0", "eslint-visitor-keys": "^4.2.1", "espree": "^10.4.0", "estraverse": "^5.3.0", "picomatch": "^4.0.3" }, "peerDependencies": { "eslint": "^9.0.0 || ^10.0.0" } }, "sha512-nPK52ZHvot8Ju/0A4ucSX1dcPV2/1clx0kLcH5wDmrE4naKso7TUC/voUyU1O9OTKTrR6MYip6LP0ogEMQ9jPQ=="],
 

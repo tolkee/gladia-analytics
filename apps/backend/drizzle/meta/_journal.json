@@ -36,6 +36,13 @@
       "when": 1788199256873,
       "tag": "0004_brainy_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788205606928,
+      "tag": "0005_special_mindworm",
+      "breakpoints": true
     }
   ]
 }

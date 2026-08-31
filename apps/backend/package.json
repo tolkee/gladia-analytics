@@ -26,6 +26,7 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.25",
     "@gladia-analytics/common": "workspace:*",
+    "@streamparser/json-whatwg": "^0.0.26",
     "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.33",

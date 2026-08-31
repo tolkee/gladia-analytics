@@ -106,10 +106,19 @@ Be sure also to run the migrations to create the database schema :
 bun run db:migrate
 ```
 
-Then just update the .env file to match your local infra configuration.
+The compose stack also starts a local MinIO S3-compatible server on port `9000`, with its console
+on port `9001`. The `minio-init` service creates the private `gladia-analytics` bucket and configures
+CORS for the Vite development server.
+
+Then update the `.env` file to match the local infrastructure configuration.
 
 ```bash
 DATABASE_URL=postgresql://todo:todo@localhost:5432/todo
+S3_ENDPOINT=http://localhost:9000
+S3_REGION=us-east-1
+S3_BUCKET=gladia-analytics
+S3_ACCESS_KEY_ID=gladia
+S3_SECRET_ACCESS_KEY=gladia-local-secret
 ```
 
 ## Development transcription seed
@@ -130,3 +139,32 @@ bun run db:seed:transcriptions --organisation-id <uuid> --count 250 --seed demo-
 
 Run `bun run db:seed:transcriptions --help` for all options. Re-running the command replaces its
 deterministic seed rows without touching other transcriptions.
+
+## Transcription uploads
+
+Transcription JSON files are uploaded through the backend as a raw request body:
+
+```http
+POST /api/organisations/:organisationId/transcription-uploads?filename=transcriptions.json
+Content-Type: application/json
+
+<raw JSON file body>
+```
+
+The backend streams the request into S3-compatible storage without buffering the whole file,
+records the authoritative number of uploaded bytes, and creates the upload in the `queued` state.
+The in-process worker then validates the stored JSON as a stream, stages normalized transcriptions
+in bounded batches, and atomically merges a successful upload into the analytics dataset. Uploads
+are incremental: new transcription IDs are appended and equal or newer versions update existing
+rows. Transcriptions absent from an upload are preserved.
+
+`processedItems` is updated after each staged batch and is the final item count when processing
+completes. Invalid JSON or transcription data fails the whole upload with a structured JSON error;
+staged rows are then removed while the original S3 object remains available for inspection.
+
+This POC deliberately uses one proxied HTTP upload and an in-process polling worker. A production
+version intended for multi-GB files should add resumable S3 multipart uploads, a durable queue,
+worker leases, and asynchronous cleanup for very large failed uploads.
+
+Uploads are organisation-scoped. Organisation admins may upload files, while all organisation
+members may inspect an upload and request a download URL.

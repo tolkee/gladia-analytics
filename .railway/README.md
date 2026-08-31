@@ -2,6 +2,10 @@
 
 `railway.ts` is the source of truth for this project's Railway resources.
 
+When applied to an environment, it provisions the backend service, PostgreSQL, and a private
+S3-compatible bucket for transcription uploads. The bucket connection variables are wired into
+the backend automatically through Railway resource references.
+
 Before the first apply, create the `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and
 `GOOGLE_CLIENT_SECRET` variables on the backend service. The IaC file preserves their values
 without storing secrets in source control. For a fork, also update the GitHub repository,

@@ -329,7 +329,7 @@ export class TranscriptionService {
   }
 
   async addStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
     items: TranscriptionSource[],
   ) {
@@ -339,7 +339,7 @@ export class TranscriptionService {
     >();
 
     for (const item of items) {
-      const transcription = { importId, ...toTranscriptionInsert(organisationId, item) };
+      const transcription = { uploadId, ...toTranscriptionInsert(organisationId, item) };
       const current = transcriptionsById.get(item.id);
 
       if (!current || current.version <= transcription.version) {
@@ -348,55 +348,43 @@ export class TranscriptionService {
     }
 
     const values = [...transcriptionsById.values()];
-    let stagedCount = 0;
 
     if (values.length > 0) {
       await this.db.transaction(async (tx) => {
         for (let start = 0; start < values.length; start += INSERT_CHUNK_SIZE) {
-          const staged = await tx
+          await tx
             .insert(stagedTranscriptionsTable)
             .values(values.slice(start, start + INSERT_CHUNK_SIZE))
             .onConflictDoUpdate({
               target: [
-                stagedTranscriptionsTable.importId,
+                stagedTranscriptionsTable.uploadId,
                 stagedTranscriptionsTable.organisationId,
                 stagedTranscriptionsTable.id,
               ],
               set: transcriptionConflictUpdateSet,
               setWhere: lte(stagedTranscriptionsTable.version, excluded("version")),
-            })
-            .returning({ id: stagedTranscriptionsTable.id });
-
-          stagedCount += staged.length;
+            });
         }
       });
     }
-
-    return {
-      receivedCount: items.length,
-      stagedCount,
-    };
   }
 
   async removeStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
   ) {
-    const removed = await this.db
+    await this.db
       .delete(stagedTranscriptionsTable)
       .where(
         and(
-          eq(stagedTranscriptionsTable.importId, importId),
+          eq(stagedTranscriptionsTable.uploadId, uploadId),
           eq(stagedTranscriptionsTable.organisationId, organisationId),
         ),
-      )
-      .returning({ id: stagedTranscriptionsTable.id });
-
-    return removed.length;
+      );
   }
 
   async mergeStagedTranscriptions(
-    importId: StagedTranscription["importId"],
+    uploadId: StagedTranscription["uploadId"],
     organisationId: Organisation["id"],
   ) {
     return this.db.transaction(async (tx) => {
@@ -430,32 +418,28 @@ export class TranscriptionService {
         .from(stagedTranscriptionsTable)
         .where(
           and(
-            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.uploadId, uploadId),
             eq(stagedTranscriptionsTable.organisationId, organisationId),
           ),
         );
 
-      const merged = await tx
+      await tx
         .insert(transcriptionsTable)
         .select(stagedTranscriptions)
         .onConflictDoUpdate({
           target: [transcriptionsTable.organisationId, transcriptionsTable.id],
           set: transcriptionConflictUpdateSet,
           setWhere: lte(transcriptionsTable.version, excluded("version")),
-        })
-        .returning({ id: transcriptionsTable.id });
+        });
 
-      const removed = await tx
+      await tx
         .delete(stagedTranscriptionsTable)
         .where(
           and(
-            eq(stagedTranscriptionsTable.importId, importId),
+            eq(stagedTranscriptionsTable.uploadId, uploadId),
             eq(stagedTranscriptionsTable.organisationId, organisationId),
           ),
-        )
-        .returning({ id: stagedTranscriptionsTable.id });
-
-      return { mergedCount: merged.length, removedCount: removed.length };
+        );
     });
   }
 }
