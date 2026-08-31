@@ -1,5 +1,6 @@
 import type { TranscriptionUpload } from "../api/get-transcription-upload.query";
 import { formatFileSize } from "../utils";
+import { UploadErrorDialog } from "./upload-error-dialog";
 import { Badge } from "@gladia-analytics/ui/components/badge";
 import {
   Table,
@@ -60,7 +61,7 @@ const columns = columnHelper.columns([
   columnHelper.accessor("error", {
     header: "Info",
     size: 280,
-    cell: ({ getValue }) => {
+    cell: ({ getValue, row }) => {
       const error = getValue();
 
       if (!error) {
@@ -68,9 +69,11 @@ const columns = columnHelper.columns([
       }
 
       return (
-        <div className="min-w-0" title={error.message}>
-          <p className="truncate text-sm text-destructive">{error.message}</p>
-          <p className="truncate font-mono text-xs text-muted-foreground">{error.code}</p>
+        <div className="min-w-0">
+          <p className="truncate text-sm text-destructive" title={error.message}>
+            {error.message}
+          </p>
+          <UploadErrorDialog error={error} filename={row.original.originalFilename} />
         </div>
       );
     },
