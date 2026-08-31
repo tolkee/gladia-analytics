@@ -14,13 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const transcriptionImportStatuses = [
-  "awaiting_upload",
-  "queued",
-  "processing",
-  "completed",
-  "failed",
-] as const;
+export const transcriptionImportStatuses = ["queued", "processing", "completed", "failed"] as const;
 
 export const transcriptionImportStatusEnum = pgEnum(
   "transcription_import_status",
@@ -43,10 +37,8 @@ export const transcriptionImportsTable = pgTable(
     objectKey: text("object_key").notNull(),
     originalFilename: text("original_filename").notNull(),
     contentType: text("content_type").notNull(),
-    expectedSizeBytes: integer("expected_size_bytes").notNull(),
-    actualSizeBytes: integer("actual_size_bytes"),
-    etag: text(),
-    status: transcriptionImportStatusEnum().default("awaiting_upload").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    status: transcriptionImportStatusEnum().default("queued").notNull(),
     phase: text(),
     processedItems: integer("processed_items").default(0).notNull(),
     totalItems: integer("total_items"),
@@ -56,7 +48,6 @@ export const transcriptionImportsTable = pgTable(
     attemptCount: integer("attempt_count").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-    uploadedAt: timestamp("uploaded_at", { withTimezone: true }),
     processingStartedAt: timestamp("processing_started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
@@ -67,11 +58,7 @@ export const transcriptionImportsTable = pgTable(
       table.createdAt,
     ),
     index("transcription_imports_status_created_at_idx").on(table.status, table.createdAt),
-    check("transcription_imports_expected_size_positive", sql`${table.expectedSizeBytes} > 0`),
-    check(
-      "transcription_imports_actual_size_non_negative",
-      sql`${table.actualSizeBytes} IS NULL OR ${table.actualSizeBytes} >= 0`,
-    ),
+    check("transcription_imports_size_positive", sql`${table.sizeBytes} > 0`),
     check("transcription_imports_processed_items_positive", sql`${table.processedItems} >= 0`),
     check(
       "transcription_imports_total_items_positive",

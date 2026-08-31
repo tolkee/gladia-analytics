@@ -142,15 +142,19 @@ deterministic seed rows without touching other transcriptions.
 
 ## Transcription imports
 
-Transcription JSON files are uploaded directly to S3-compatible storage through a presigned URL:
+Transcription JSON files are uploaded through the backend as a raw request body:
 
-1. `POST /api/organisations/:organisationId/transcription-imports` creates an import and returns a
-   presigned `PUT` request.
-2. The client uploads the file using the returned method and headers.
-3. `POST /api/organisations/:organisationId/transcription-imports/:importId/complete` verifies the
-   stored object and queues the import.
-4. The in-process worker claims queued imports. Processing is currently a stub until the
-   transcription schema is introduced.
+```http
+POST /api/organisations/:organisationId/transcription-imports?filename=transcriptions.json
+Content-Type: application/json
 
-Imports are organisation-scoped. Organisation admins may create and complete uploads, while all
-organisation members may inspect an import and request a download URL.
+<raw JSON file body>
+```
+
+The backend enforces a 25 MB limit, streams the request into S3-compatible storage, records the
+authoritative number of uploaded bytes, and creates the import in the `queued` state. The
+in-process worker then claims queued imports. Processing is currently a stub until the
+transcription schema is introduced.
+
+Imports are organisation-scoped. Organisation admins may upload files, while all organisation
+members may inspect an import and request a download URL.

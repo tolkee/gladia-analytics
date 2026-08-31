@@ -4,22 +4,21 @@ import type { Db } from "#lib/db";
 import { InvariantError } from "#lib/errors";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import {
-  TranscriptionImportContentTypeMismatchError,
-  TranscriptionImportFileSizeMismatchError,
-  TranscriptionImportInvalidStateError,
+  TranscriptionImportEmptyFileError,
+  TranscriptionImportFileTooLargeError,
   TranscriptionImportNotFoundError,
-  TranscriptionImportObjectNotFoundError,
 } from "./errors";
-import type { FileStorage, PresignedFileRequest } from "./file-storage";
-import type { CreateTranscriptionImportInput } from "./transcription-import.dto";
+import type { FileStorage, PresignedDownloadRequest } from "./file-storage";
+import {
+  MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES,
+  TRANSCRIPTION_IMPORT_CONTENT_TYPE,
+  type CreateTranscriptionImportInput,
+} from "./transcription-import.dto";
 import { transcriptionImportsTable, type TranscriptionImport } from "./transcription-import.schema";
 
 export type TranscriptionImportDetails = Omit<TranscriptionImport, "objectKey">;
 
-export type CreatedTranscriptionImport = {
-  transcriptionImport: TranscriptionImportDetails;
-  upload: PresignedFileRequest;
-};
+export type CreatedTranscriptionImport = TranscriptionImportDetails;
 
 export class TranscriptionImportService {
   constructor(
@@ -32,32 +31,57 @@ export class TranscriptionImportService {
     userId: User["id"],
     organisationId: Organisation["id"],
     input: CreateTranscriptionImportInput,
+    file: Request,
   ): Promise<CreatedTranscriptionImport> {
     await this.organisationService.isInOrganisation(userId, organisationId, "admin");
 
     const id = crypto.randomUUID();
     const objectKey = `organisations/${organisationId}/transcription-imports/${id}.json`;
-    const [transcriptionImport] = await this.db
-      .insert(transcriptionImportsTable)
-      .values({
-        id,
-        organisationId,
-        createdBy: userId,
-        objectKey,
-        originalFilename: input.filename,
-        contentType: input.contentType,
-        expectedSizeBytes: input.sizeBytes,
-      })
-      .returning();
+    const sizeBytes = await this.storage.write(objectKey, file, TRANSCRIPTION_IMPORT_CONTENT_TYPE);
 
-    if (!transcriptionImport) {
-      throw new InvariantError("Transcription import insert returned no row");
+    if (sizeBytes === 0) {
+      await this.storage.delete(objectKey);
+      throw new TranscriptionImportEmptyFileError();
     }
 
-    return {
-      transcriptionImport: this.toDetails(transcriptionImport),
-      upload: this.storage.createUploadRequest(objectKey, input.contentType),
-    };
+    if (sizeBytes > MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES) {
+      await this.storage.delete(objectKey);
+      throw new TranscriptionImportFileTooLargeError(
+        sizeBytes,
+        MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES,
+      );
+    }
+
+    try {
+      const [transcriptionImport] = await this.db
+        .insert(transcriptionImportsTable)
+        .values({
+          id,
+          organisationId,
+          createdBy: userId,
+          objectKey,
+          originalFilename: input.filename,
+          contentType: TRANSCRIPTION_IMPORT_CONTENT_TYPE,
+          sizeBytes,
+          status: "queued",
+          phase: "queued",
+        })
+        .returning();
+
+      if (!transcriptionImport) {
+        throw new InvariantError("Transcription import insert returned no row");
+      }
+
+      return this.toDetails(transcriptionImport);
+    } catch (error) {
+      try {
+        await this.storage.delete(objectKey);
+      } catch {
+        // Preserve the database error; orphaned objects can be cleaned up independently.
+      }
+
+      throw error;
+    }
   }
 
   async getTranscriptionImports(
@@ -87,97 +111,14 @@ export class TranscriptionImportService {
     return this.toDetails(transcriptionImport);
   }
 
-  async completeUpload(
-    userId: User["id"],
-    organisationId: Organisation["id"],
-    importId: TranscriptionImport["id"],
-  ): Promise<TranscriptionImportDetails> {
-    await this.organisationService.isInOrganisation(userId, organisationId, "admin");
-
-    const transcriptionImport = await this.findTranscriptionImport(organisationId, importId);
-
-    if (["queued", "processing", "completed"].includes(transcriptionImport.status)) {
-      return this.toDetails(transcriptionImport);
-    }
-
-    if (transcriptionImport.status !== "awaiting_upload") {
-      throw new TranscriptionImportInvalidStateError();
-    }
-
-    const storedFile = await this.storage.stat(transcriptionImport.objectKey);
-
-    if (!storedFile) {
-      throw new TranscriptionImportObjectNotFoundError();
-    }
-
-    if (storedFile.size !== transcriptionImport.expectedSizeBytes) {
-      await this.markUploadFailed(
-        transcriptionImport.id,
-        "FILE_SIZE_MISMATCH",
-        "Uploaded object size does not match the declared size",
-        storedFile.size,
-      );
-
-      throw new TranscriptionImportFileSizeMismatchError(
-        transcriptionImport.expectedSizeBytes,
-        storedFile.size,
-      );
-    }
-
-    const storedContentType = storedFile.contentType.split(";", 1)[0]?.trim().toLowerCase();
-    if (storedContentType !== transcriptionImport.contentType) {
-      await this.markUploadFailed(
-        transcriptionImport.id,
-        "CONTENT_TYPE_MISMATCH",
-        "Uploaded object content type does not match the declared content type",
-        storedFile.size,
-      );
-
-      throw new TranscriptionImportContentTypeMismatchError(
-        transcriptionImport.contentType,
-        storedFile.contentType,
-      );
-    }
-
-    const now = new Date();
-    const [queuedImport] = await this.db
-      .update(transcriptionImportsTable)
-      .set({
-        status: "queued",
-        phase: "queued",
-        actualSizeBytes: storedFile.size,
-        etag: storedFile.etag,
-        uploadedAt: now,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(transcriptionImportsTable.id, transcriptionImport.id),
-          eq(transcriptionImportsTable.organisationId, organisationId),
-          eq(transcriptionImportsTable.status, "awaiting_upload"),
-        ),
-      )
-      .returning();
-
-    if (!queuedImport) {
-      throw new TranscriptionImportInvalidStateError();
-    }
-
-    return this.toDetails(queuedImport);
-  }
-
   async createDownloadRequest(
     userId: User["id"],
     organisationId: Organisation["id"],
     importId: TranscriptionImport["id"],
-  ): Promise<PresignedFileRequest> {
+  ): Promise<PresignedDownloadRequest> {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
     const transcriptionImport = await this.findTranscriptionImport(organisationId, importId);
-
-    if (transcriptionImport.status === "awaiting_upload") {
-      throw new TranscriptionImportInvalidStateError();
-    }
 
     return this.storage.createDownloadRequest(transcriptionImport.objectKey);
   }
@@ -285,32 +226,6 @@ export class TranscriptionImportService {
     }
 
     return transcriptionImport;
-  }
-
-  private async markUploadFailed(
-    importId: TranscriptionImport["id"],
-    errorCode: string,
-    errorMessage: string,
-    actualSizeBytes: number,
-  ): Promise<void> {
-    const now = new Date();
-    await this.db
-      .update(transcriptionImportsTable)
-      .set({
-        status: "failed",
-        phase: "upload_validation",
-        actualSizeBytes,
-        errorCode,
-        errorMessage,
-        completedAt: now,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(transcriptionImportsTable.id, importId),
-          eq(transcriptionImportsTable.status, "awaiting_upload"),
-        ),
-      );
   }
 
   private toDetails(transcriptionImport: TranscriptionImport): TranscriptionImportDetails {

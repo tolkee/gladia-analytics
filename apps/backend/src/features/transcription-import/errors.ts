@@ -5,36 +5,19 @@ export class TranscriptionImportNotFoundError extends Error {
   }
 }
 
-export class TranscriptionImportInvalidStateError extends Error {
+export class TranscriptionImportEmptyFileError extends Error {
   constructor() {
-    super("Transcription import is not awaiting an upload");
-    this.name = "TranscriptionImportInvalidStateError";
+    super("Transcription import file is empty");
+    this.name = "TranscriptionImportEmptyFileError";
   }
 }
 
-export class TranscriptionImportObjectNotFoundError extends Error {
-  constructor() {
-    super("Uploaded object not found");
-    this.name = "TranscriptionImportObjectNotFoundError";
-  }
-}
-
-export class TranscriptionImportFileSizeMismatchError extends Error {
+export class TranscriptionImportFileTooLargeError extends Error {
   constructor(
-    readonly expectedSizeBytes: number,
-    readonly actualSizeBytes: number,
+    readonly sizeBytes: number,
+    readonly maxSizeBytes: number,
   ) {
-    super("Uploaded object size does not match the declared size");
-    this.name = "TranscriptionImportFileSizeMismatchError";
-  }
-}
-
-export class TranscriptionImportContentTypeMismatchError extends Error {
-  constructor(
-    readonly expectedContentType: string,
-    readonly actualContentType: string,
-  ) {
-    super("Uploaded object content type does not match the declared content type");
-    this.name = "TranscriptionImportContentTypeMismatchError";
+    super("Transcription import file is too large");
+    this.name = "TranscriptionImportFileTooLargeError";
   }
 }

@@ -4,7 +4,7 @@ export type {
   TranscriptionImportDetails,
 } from "./transcription-import.service.ts";
 export { S3Storage } from "./s3-storage.ts";
-export type { FileStorage, PresignedFileRequest, StoredFileMetadata } from "./file-storage.ts";
+export type { FileStorage, PresignedDownloadRequest } from "./file-storage.ts";
 export {
   transcriptionImportsTable,
   transcriptionImportStatuses,
