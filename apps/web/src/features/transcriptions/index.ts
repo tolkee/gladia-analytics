@@ -22,5 +22,5 @@ export {
 export { AnalyticsPeriodPicker } from "./components/analytics/analytics-period-picker";
 export { AnalyticsSummary } from "./components/analytics/analytics-summary";
 export { AnalyticsTimeline } from "./components/analytics/analytics-timeline";
-export { TranscriptionDetailDrawer } from "./components/transcription-detail-drawer";
+export { TranscriptionDetailDrawer } from "./components/transcription-detail-drawer/transcription-detail-drawer";
 export { TranscriptionsDataTable } from "./components/transcriptions-data-table";
