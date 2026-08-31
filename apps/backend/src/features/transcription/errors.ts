@@ -4,10 +4,3 @@ export class TranscriptionNotFoundError extends Error {
     this.name = "TranscriptionNotFoundError";
   }
 }
-
-export class InvalidTranscriptionCursorError extends Error {
-  constructor() {
-    super("Invalid transcription pagination cursor");
-    this.name = "InvalidTranscriptionCursorError";
-  }
-}

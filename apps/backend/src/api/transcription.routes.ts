@@ -2,14 +2,13 @@ import { organisationParamsSchema } from "#features/organisation";
 import {
   analyticsTimeRangeSchema,
   createTranscriptionsSchema,
-  getTranscriptionsQuerySchema,
-  InvalidTranscriptionCursorError,
   removeTranscriptionsSchema,
   TranscriptionNotFoundError,
   transcriptionParamsSchema,
   type TranscriptionService,
 } from "#features/transcription";
 import { apiError } from "#lib/errors";
+import { cursorPaginationQuerySchema, InvalidPaginationCursorError } from "#lib/pagination";
 import { ApiErrorCode } from "@gladia-analytics/common/errors";
 import { Hono, type Context } from "hono";
 import { authGuardMiddleware } from "./middlewares/auth-guard";
@@ -42,7 +41,7 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
       "/:organisationId/transcriptions",
       authGuardMiddleware,
       requestValidator("param", organisationParamsSchema),
-      requestValidator("query", getTranscriptionsQuerySchema),
+      requestValidator("query", cursorPaginationQuerySchema),
       async (ctx) => {
         try {
           const transcriptions = await transcriptionService.getTranscriptions(
@@ -122,7 +121,7 @@ function handleTranscriptionError(ctx: Context, error: unknown) {
     return apiError(ctx, 404, ApiErrorCode.TRANSCRIPTION_NOT_FOUND, "Transcription not found");
   }
 
-  if (error instanceof InvalidTranscriptionCursorError) {
+  if (error instanceof InvalidPaginationCursorError) {
     return apiError(ctx, 400, ApiErrorCode.INVALID_REQUEST, "The pagination cursor is invalid", {
       location: "query",
       issues: [{ path: ["cursor"], message: "Invalid cursor" }],

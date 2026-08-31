@@ -1,20 +1,24 @@
 import type { User } from "#features/auth";
 import type { Organisation, OrganisationService } from "#features/organisation";
 import type { Db } from "#lib/db";
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  type CursorPaginationQuery,
+  type Paginated,
+} from "#lib/pagination";
 import { and, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
+import * as z from "zod";
 import type {
   AnalyticsLanguageMode,
   AnalyticsResponse,
   AnalyticsTimeRange,
   CreateTranscriptionsInput,
-  GetTranscriptionsQuery,
   RemoveTranscriptionsInput,
 } from "./transcription.dto";
 import { TranscriptionNotFoundError } from "./errors";
 import {
   ASYNC_HOURLY_RATE_USD,
-  decodeCursor,
-  encodeCursor,
   fillLanguageModes,
   fillTimeline,
   fillTypes,
@@ -27,6 +31,11 @@ import {
   transcriptionUpsertSet,
 } from "./transcription.helpers";
 import { transcriptionsTable, type Transcription } from "./transcription.schema";
+
+const transcriptionCursorSchema = z.object({
+  createdAt: z.iso.datetime({ offset: true }),
+  id: z.uuid(),
+});
 
 export type TranscriptionListItem = Pick<
   Transcription,
@@ -44,14 +53,6 @@ export type TranscriptionListItem = Pick<
   | "languages"
   | "billableSeconds"
 >;
-
-export type PaginatedTranscriptions = {
-  data: TranscriptionListItem[];
-  meta: {
-    current: string | null;
-    next: string | null;
-  };
-};
 
 export type CreateTranscriptionsResult = {
   receivedCount: number;
@@ -223,11 +224,13 @@ export class TranscriptionService {
   async getTranscriptions(
     userId: User["id"],
     organisationId: Organisation["id"],
-    query: GetTranscriptionsQuery,
-  ): Promise<PaginatedTranscriptions> {
+    query: CursorPaginationQuery,
+  ): Promise<Paginated<TranscriptionListItem>> {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
-    const cursor = query.cursor ? decodeCursor(query.cursor) : null;
+    const cursor = query.cursor
+      ? decodePaginationCursor(query.cursor, transcriptionCursorSchema)
+      : null;
     const cursorFilter = cursor
       ? or(
           lt(transcriptionsTable.createdAt, new Date(cursor.createdAt)),
@@ -255,7 +258,10 @@ export class TranscriptionService {
         current: query.cursor ?? null,
         next:
           hasNextPage && lastItem
-            ? encodeCursor({ createdAt: lastItem.createdAt.toISOString(), id: lastItem.id })
+            ? encodePaginationCursor({
+                createdAt: lastItem.createdAt.toISOString(),
+                id: lastItem.id,
+              })
             : null,
       },
     };

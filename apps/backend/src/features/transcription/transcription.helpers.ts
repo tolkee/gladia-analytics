@@ -5,11 +5,8 @@ import type {
   AnalyticsLanguageMode,
   AnalyticsResponse,
   AnalyticsTimeRange,
-  TranscriptionCursorPayload,
   TranscriptionSource,
 } from "./transcription.dto";
-import { transcriptionCursorPayloadSchema } from "./transcription.dto";
-import { InvalidTranscriptionCursorError } from "./errors";
 import { transcriptionsTable } from "./transcription.schema";
 
 export const REALTIME_HOURLY_RATE_USD = 0.2;
@@ -90,25 +87,6 @@ export function toTranscriptionInsert(
     resultTranscriptionTime: result?.transcription_time ?? null,
     billableSeconds: result?.billing_time ?? result?.audio_duration ?? file?.audio_duration ?? 0,
   };
-}
-
-export function encodeCursor(payload: TranscriptionCursorPayload): string {
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-}
-
-export function decodeCursor(cursor: string): TranscriptionCursorPayload {
-  try {
-    const payload: unknown = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-    const result = transcriptionCursorPayloadSchema.safeParse(payload);
-
-    if (!result.success) throw new InvalidTranscriptionCursorError();
-
-    return result.data;
-  } catch (error) {
-    if (error instanceof InvalidTranscriptionCursorError) throw error;
-
-    throw new InvalidTranscriptionCursorError();
-  }
 }
 
 type TimelineAggregateRow = {

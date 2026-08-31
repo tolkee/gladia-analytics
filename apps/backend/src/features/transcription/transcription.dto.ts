@@ -89,13 +89,6 @@ export const analyticsTimeRangeSchema = z
 
 export type AnalyticsTimeRange = z.infer<typeof analyticsTimeRangeSchema>;
 
-export const getTranscriptionsQuerySchema = z.object({
-  cursor: z.string().min(1).max(1_024).optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(25),
-});
-
-export type GetTranscriptionsQuery = z.infer<typeof getTranscriptionsQuerySchema>;
-
 export const transcriptionParamsSchema = z.object({
   organisationId: z.uuid(),
   transcriptionId: z.uuid(),
@@ -110,13 +103,6 @@ export const removeTranscriptionsSchema = z.object({
 });
 
 export type RemoveTranscriptionsInput = z.infer<typeof removeTranscriptionsSchema>;
-
-export const transcriptionCursorPayloadSchema = z.object({
-  createdAt: sourceTimestampSchema,
-  id: z.uuid(),
-});
-
-export type TranscriptionCursorPayload = z.infer<typeof transcriptionCursorPayloadSchema>;
 
 export type AnalyticsLanguageMode = "auto-detect" | "single-language" | "multiple-languages";
 
