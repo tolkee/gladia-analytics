@@ -1,9 +1,10 @@
 import { createMiddleware } from "hono/factory";
 import { pino } from "pino";
+import type { ApiEnv } from "../types";
 
 const baseLogger = pino();
 
-export const loggerMiddleware = createMiddleware(async (c, next) => {
+export const loggerMiddleware = createMiddleware<ApiEnv>(async (c, next) => {
   const start = Date.now();
   const requestId = c.var.requestId;
 

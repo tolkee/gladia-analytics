@@ -111,3 +111,22 @@ Then just update the .env file to match your local infra configuration.
 ```bash
 DATABASE_URL=postgresql://todo:todo@localhost:5432/todo
 ```
+
+## Development transcription seed
+
+Populate existing organisations with varied transcription data for the infinite table and analytics
+charts. The command defaults to 180 rows per organisation, spans the previous year, and can only run
+when `ENV=dev`.
+
+```bash
+bun run db:seed:transcriptions
+```
+
+Target one organisation or change the reproducible variation and row count:
+
+```bash
+bun run db:seed:transcriptions --organisation-id <uuid> --count 250 --seed demo-2
+```
+
+Run `bun run db:seed:transcriptions --help` for all options. Re-running the command replaces its
+deterministic seed rows without touching other transcriptions.

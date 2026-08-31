@@ -12,13 +12,14 @@ import { apiError } from "#lib/errors";
 import type { ApplyGlobalResponse } from "hono/client";
 import { createOrganisationRoutes } from "./organisation.routes";
 import { createTranscriptionRoutes } from "./transcription.routes";
+import type { ApiEnv } from "./types";
 
 export function createApi(services: Services) {
   const todoRoutes = createTodoRoutes(services.todoService);
   const organisationRoutes = createOrganisationRoutes(services.organisationService);
   const transcriptionRoutes = createTranscriptionRoutes(services.transcriptionService);
 
-  return new Hono()
+  return new Hono<ApiEnv>()
     .use(requestId())
     .use(
       cors({
@@ -35,10 +36,12 @@ export function createApi(services: Services) {
     .get("/api/health", (ctx) => {
       return ctx.json({ status: "ok" });
     })
-    .onError((_, ctx) =>
+    .onError((error, ctx) => {
+      ctx.get("logger").error({ err: error }, "unhandled request error");
+
       // Fallback for unhandled/unexpected errors
-      apiError(ctx, 500, ApiErrorCode.INTERNAL_SERVER_ERROR, "Internal server error"),
-    );
+      return apiError(ctx, 500, ApiErrorCode.INTERNAL_SERVER_ERROR, "Internal server error");
+    });
 }
 
 export type ApiType = ApplyGlobalResponse<
