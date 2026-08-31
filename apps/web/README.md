@@ -35,7 +35,8 @@ Each top-level subject : auth, feature 1, feature 2, etc... should have its own 
 
 The way we try to use Tanstack Route, in this project is :
 
-- we fetch the data needed for the route in the `loader` or `beforeLoad` function thanks to ensure `await queryClient.query(`, this way it create a suspense for this call.
+- we fetch the data needed for the route in the `loader` or `beforeLoad` function with `await queryClient.query(query.options(...))`. Awaiting the query keeps the route pending until its required data is available.
+- `queryClient.ensureQueryData(...)` is deprecated and must not be used. Use `queryClient.query(...)` instead.
 - we provide a pending component to show while the data is being fetched.
 - in route components, we can then use `useSuspenseQuery` to access those data who will have defined type has we know we only reach that part once loaded
 - in the route components, we try to have the code page (we don't want it to be like just returning a component `<PageView>` or something like this ). Still we extract component to components root folder or component feature folder, when it's needed by design : a list of card ( => CardCompoent), a dialog ( => DialogComponent), etc....This allows to keep the strucure of the page in the page component, while extracting some logic to the feature component.
@@ -71,6 +72,12 @@ const { user } = Route.useRouteContext(); // user: User
 ## Queries and mutations to the API
 
 We define queries and mutations files to interact with the API hono rpc client.
+
+API files use kebab-case, a singular resource name, and a suffix matching their TanStack
+operation. Keep the resource name singular even when a query returns a list:
+
+- Query: `<operation>-<resource>.query.ts`, for example `get-user-organisation.query.ts`.
+- Mutation: `<operation>-<resource>.mutation.ts`, for example `create-organisation.mutation.ts`.
 
 A query file should always look like this :
 
