@@ -1,4 +1,4 @@
-import { stubOrganization } from "#lib/app-stubs";
+import type { Organisation } from "#features/organisations";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,14 +11,13 @@ import { SidebarTrigger } from "@gladia-analytics/ui/components/sidebar";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ThemeSwitcher } from "./theme-switcher";
 
-const pageNames = {
-  "/analytics": "Analytics",
-  "/transcriptions": "Transcriptions",
-} as const;
+type AppSiteHeaderProps = {
+  organisation: Organisation;
+};
 
-export function AppSiteHeader() {
-  const location = useLocation();
-  const pageName = pageNames[location.pathname as keyof typeof pageNames] ?? "App";
+export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const pageName = pathname.endsWith("/transcriptions") ? "Transcriptions" : "Analytics";
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background">
@@ -28,8 +27,15 @@ export function AppSiteHeader() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link to="/analytics" />}>
-                {stubOrganization.name}
+              <BreadcrumbLink
+                render={
+                  <Link
+                    to="/organisations/$organisationId/analytics"
+                    params={{ organisationId: organisation.id }}
+                  />
+                }
+              >
+                {organisation.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

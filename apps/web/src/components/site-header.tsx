@@ -1,4 +1,5 @@
 import { authClient } from "#lib/auth";
+import { getSessionQuery } from "#features/auth";
 import { useRouter } from "@tanstack/react-router";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -9,10 +10,11 @@ import { Route } from "#routes/__root";
 
 export function SiteHeader() {
   const router = useRouter();
-  const { user } = Route.useRouteContext();
+  const { queryClient, user } = Route.useRouteContext();
 
   async function logout() {
     await authClient.signOut();
+    queryClient.setQueryData(getSessionQuery.key(), null);
     await router.invalidate();
     await router.navigate({ to: "/login" });
   }

@@ -11,10 +11,8 @@ const searchParamsSchema = z.object({
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
-  beforeLoad: async ({ search }) => {
-    const { data: session } = await authClient.getSession();
-
-    if (session) {
+  beforeLoad: ({ context, search }) => {
+    if (context.session) {
       throw redirect({ to: search.redirect ?? "/" });
     }
 

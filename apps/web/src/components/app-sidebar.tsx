@@ -23,25 +23,52 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@gladia-analytics/ui/components/sidebar";
-import { Link, useLocation } from "@tanstack/react-router";
-import { stubOrganization } from "#lib/app-stubs";
+import type { Organisation } from "#features/organisations";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { AppSidebarUser } from "./app-sidebar-user";
 
 const navigation = [
   {
     label: "Analytics",
-    to: "/analytics" as const,
+    to: "/organisations/$organisationId/analytics" as const,
+    pathSuffix: "/analytics",
     icon: Analytics02Icon,
   },
   {
     label: "Transcriptions",
-    to: "/transcriptions" as const,
+    to: "/organisations/$organisationId/transcriptions" as const,
+    pathSuffix: "/transcriptions",
     icon: AiTranscribeAudioIcon,
   },
 ];
 
-export function AppSidebar() {
-  const location = useLocation();
+type AppSidebarProps = {
+  organisations: Organisation[];
+  organisation: Organisation;
+};
+
+export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const navigate = useNavigate();
+
+  function selectOrganisation(organisationId: string) {
+    if (organisationId === organisation.id) {
+      return;
+    }
+
+    if (pathname.endsWith("/transcriptions")) {
+      void navigate({
+        to: "/organisations/$organisationId/transcriptions",
+        params: { organisationId },
+      });
+      return;
+    }
+
+    void navigate({
+      to: "/organisations/$organisationId/analytics",
+      params: { organisationId },
+    });
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -51,22 +78,27 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <SidebarMenuButton size="lg" tooltip={stubOrganization.name}>
+                  <SidebarMenuButton size="lg" tooltip={organisation.name}>
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                       <HugeiconsIcon icon={Building02Icon} strokeWidth={2} className="size-4" />
                     </span>
                     <span className="min-w-0 flex-1 truncate text-left font-medium">
-                      {stubOrganization.name}
+                      {organisation.name}
                     </span>
                     <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-4" />
                   </SidebarMenuButton>
                 }
               />
               <DropdownMenuContent side="bottom" align="start">
-                <DropdownMenuRadioGroup value={stubOrganization.slug}>
-                  <DropdownMenuRadioItem value={stubOrganization.slug}>
-                    {stubOrganization.name}
-                  </DropdownMenuRadioItem>
+                <DropdownMenuRadioGroup value={organisation.id} onValueChange={selectOrganisation}>
+                  {organisations.map((availableOrganisation) => (
+                    <DropdownMenuRadioItem
+                      key={availableOrganisation.id}
+                      value={availableOrganisation.id}
+                    >
+                      {availableOrganisation.name}
+                    </DropdownMenuRadioItem>
+                  ))}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -81,8 +113,8 @@ export function AppSidebar() {
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.to}>
                   <SidebarMenuButton
-                    render={<Link to={item.to} />}
-                    isActive={location.pathname === item.to}
+                    render={<Link to={item.to} params={{ organisationId: organisation.id }} />}
+                    isActive={pathname.endsWith(item.pathSuffix)}
                     tooltip={item.label}
                   >
                     <HugeiconsIcon icon={item.icon} strokeWidth={2} />
