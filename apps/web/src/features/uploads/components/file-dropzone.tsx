@@ -1,5 +1,5 @@
 import { Button } from "@gladia-analytics/ui/components/button";
-import { FileCheckIcon, FileUploadIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, FileCheckIcon, FileUploadIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRef, useState, type DragEvent } from "react";
 import { formatFileSize } from "../utils";
@@ -126,7 +126,7 @@ export function FileDropzone({
           type="button"
           variant="ghost"
           size="sm"
-          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
+          className="absolute top-[calc(50%+4.5rem)] left-1/2 z-10 -translate-x-1/2"
           disabled={disabled}
           onClick={() => {
             if (inputRef.current) {
@@ -136,6 +136,7 @@ export function FileDropzone({
             onFileChange(null);
           }}
         >
+          <HugeiconsIcon icon={Cancel01Icon} data-icon="inline-start" strokeWidth={2} />
           Remove file
         </Button>
       ) : null}
