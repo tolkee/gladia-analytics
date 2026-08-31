@@ -1,7 +1,6 @@
 import { organisationParamsSchema } from "#features/organisation";
 import {
   analyticsTimeRangeSchema,
-  removeTranscriptionsSchema,
   TranscriptionNotFoundError,
   transcriptionParamsSchema,
   type TranscriptionService,
@@ -70,25 +69,6 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
           );
 
           return ctx.json(transcription, 200);
-        } catch (error) {
-          return handleTranscriptionError(ctx, error);
-        }
-      },
-    )
-    .delete(
-      "/:organisationId/transcriptions",
-      authGuardMiddleware,
-      requestValidator("param", organisationParamsSchema),
-      requestValidator("json", removeTranscriptionsSchema),
-      async (ctx) => {
-        try {
-          const removedCount = await transcriptionService.removeTranscriptions(
-            ctx.get("user").id,
-            ctx.req.valid("param").organisationId,
-            ctx.req.valid("json"),
-          );
-
-          return ctx.json({ removedCount }, 200);
         } catch (error) {
           return handleTranscriptionError(ctx, error);
         }
