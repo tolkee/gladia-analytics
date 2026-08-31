@@ -5,34 +5,29 @@ import {
   type InferErrorResponseType,
   type InferSuccessResponseType,
 } from "#lib/errors";
-import type { InfiniteQuery } from "#lib/query";
-import { infiniteQueryOptions, type InfiniteData } from "@tanstack/react-query";
+import type { Query } from "#lib/query";
+import { queryOptions } from "@tanstack/react-query";
 
-const endpoint = apiClient.api.organisations[":organisationId"].transcriptions.$get;
-const PAGE_SIZE = 50;
+const endpoint =
+  apiClient.api.organisations[":organisationId"].transcriptions[":transcriptionId"].$get;
 
-type GetTranscriptionsSuccessResponse = InferSuccessResponseType<typeof endpoint>;
-type GetTranscriptionsErrorResponse = InferErrorResponseType<typeof endpoint>;
-export type Transcription = GetTranscriptionsSuccessResponse["data"][number];
+type GetTranscriptionSuccessResponse = InferSuccessResponseType<typeof endpoint>;
+type GetTranscriptionErrorResponse = InferErrorResponseType<typeof endpoint>;
+export type TranscriptionDetail = GetTranscriptionSuccessResponse;
 
-const key = (userId: string, organisationId: string) => ["transcriptions", userId, organisationId];
+const key = (userId: string, organisationId: string, transcriptionId: string) => [
+  "transcription",
+  userId,
+  organisationId,
+  transcriptionId,
+];
 
-const options = (userId: string, organisationId: string) =>
-  infiniteQueryOptions<
-    GetTranscriptionsSuccessResponse,
-    ApiError<GetTranscriptionsErrorResponse>,
-    InfiniteData<GetTranscriptionsSuccessResponse, string | null>,
-    ReturnType<typeof key>,
-    string | null
-  >({
-    queryKey: key(userId, organisationId),
-    queryFn: async ({ pageParam }) => {
+const options = (userId: string, organisationId: string, transcriptionId: string) =>
+  queryOptions<GetTranscriptionSuccessResponse, ApiError<GetTranscriptionErrorResponse>>({
+    queryKey: key(userId, organisationId, transcriptionId),
+    queryFn: async () => {
       const response = await endpoint({
-        param: { organisationId },
-        query: {
-          limit: PAGE_SIZE.toString(),
-          ...(pageParam ? { cursor: pageParam } : {}),
-        },
+        param: { organisationId, transcriptionId },
       });
 
       if (!response.ok) {
@@ -41,11 +36,9 @@ const options = (userId: string, organisationId: string) =>
 
       return response.json();
     },
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.meta.next,
   });
 
-export const getTranscriptionsQuery = {
+export const getTranscriptionQuery = {
   key,
   options,
-} satisfies InfiniteQuery;
+} satisfies Query;

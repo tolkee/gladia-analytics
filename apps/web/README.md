@@ -76,7 +76,7 @@ We define queries and mutations files to interact with the API hono rpc client.
 API files use kebab-case, a singular resource name, and a suffix matching their TanStack
 operation. Keep the resource name singular even when a query returns a list:
 
-- Query: `<operation>-<resource>.query.ts`, for example `get-user-organisation.query.ts`.
+- Query: `<operation>-<resource>.query.ts`, for example `list-user-organisations.query.ts`.
 - Mutation: `<operation>-<resource>.mutation.ts`, for example `create-organisation.mutation.ts`.
 
 A query file should always look like this :

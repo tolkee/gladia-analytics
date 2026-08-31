@@ -9,13 +9,13 @@ import { queryOptions } from "@tanstack/react-query";
 
 const endpoint = apiClient.api.organisations.$get;
 
-type GetUserOrganisationsSuccessResponse = InferSuccessResponseType<typeof endpoint>;
-type GetUserOrganisationsErrorResponse = InferErrorResponseType<typeof endpoint>;
-export type Organisation = GetUserOrganisationsSuccessResponse[number];
+type ListUserOrganisationsSuccessResponse = InferSuccessResponseType<typeof endpoint>;
+type ListUserOrganisationsErrorResponse = InferErrorResponseType<typeof endpoint>;
+export type Organisation = ListUserOrganisationsSuccessResponse[number];
 
 const key = (userId: string) => ["organisations", userId];
 const options = (userId: string) =>
-  queryOptions<GetUserOrganisationsSuccessResponse, GetUserOrganisationsErrorResponse>({
+  queryOptions<ListUserOrganisationsSuccessResponse, ListUserOrganisationsErrorResponse>({
     queryKey: key(userId),
     queryFn: async () => {
       const response = await endpoint();
@@ -28,7 +28,7 @@ const options = (userId: string) =>
     },
   });
 
-export const getUserOrganisationsQuery = {
+export const listUserOrganisationsQuery = {
   key,
   options,
 } satisfies Query;

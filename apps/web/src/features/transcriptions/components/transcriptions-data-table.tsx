@@ -1,5 +1,11 @@
-import type { Transcription } from "../api/get-transcription.query";
-import { Badge } from "@gladia-analytics/ui/components/badge";
+import type { TranscriptionSummary } from "../api/list-transcriptions.query";
+import {
+  formatTranscriptionDate,
+  formatTranscriptionDuration,
+  formatTranscriptionLanguages,
+  formatTranscriptionType,
+} from "../transcription-formatters";
+import { TranscriptionStatusBadge } from "./transcription-status-badge";
 import { Spinner } from "@gladia-analytics/ui/components/spinner";
 import {
   Table,
@@ -16,83 +22,88 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 const features = tableFeatures({ columnSizingFeature });
-const columnHelper = createColumnHelper<typeof features, Transcription>();
+const columnHelper = createColumnHelper<typeof features, TranscriptionSummary>();
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-const columns = columnHelper.columns([
-  columnHelper.accessor("fileName", {
-    header: "Transcription",
-    size: 280,
-    cell: ({ row }) => (
-      <div className="min-w-0">
-        <p className="truncate font-medium">
-          {row.original.fileName ??
-            (row.original.kind === "live" ? "Live transcription" : "Untitled audio")}
-        </p>
-        <p className="truncate font-mono text-xs text-muted-foreground">{row.original.id}</p>
-      </div>
-    ),
-  }),
-  columnHelper.accessor("status", {
-    header: "Status",
-    size: 120,
-    cell: ({ getValue }) => <StatusBadge status={getValue()} />,
-  }),
-  columnHelper.accessor("kind", {
-    header: "Type",
-    size: 120,
-    cell: ({ getValue }) => (getValue() === "live" ? "Realtime" : "Pre-recorded"),
-  }),
-  columnHelper.accessor("model", {
-    header: "Model",
-    size: 150,
-    cell: ({ getValue }) => <span className="font-mono text-xs">{getValue()}</span>,
-  }),
-  columnHelper.accessor("languages", {
-    header: "Languages",
-    size: 180,
-    cell: ({ getValue }) => {
-      const languages = getValue();
-      return languages.length > 0 ? (
-        languages.join(", ")
-      ) : (
-        <Badge variant="secondary">Auto-detect</Badge>
-      );
-    },
-  }),
-  columnHelper.accessor("fileAudioDuration", {
-    header: "Duration",
-    size: 110,
-    cell: ({ row }) => formatDuration(row.original.fileAudioDuration),
-  }),
-  columnHelper.accessor("createdAt", {
-    header: "Created",
-    size: 190,
-    cell: ({ getValue }) => dateFormatter.format(new Date(getValue())),
-  }),
-]);
+function createColumns(onTranscriptionOpen: (transcriptionId: string) => void) {
+  return columnHelper.columns([
+    columnHelper.accessor("fileName", {
+      header: "Transcription",
+      size: 280,
+      cell: ({ row }) => (
+        <button
+          type="button"
+          className="block min-w-0 max-w-full text-left focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+          aria-label={`Open ${row.original.fileName ?? "transcription"}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onTranscriptionOpen(row.original.id);
+          }}
+        >
+          <p className="truncate font-medium">
+            {row.original.fileName ??
+              (row.original.kind === "live" ? "Live transcription" : "Untitled audio")}
+          </p>
+          <p className="truncate font-mono text-xs text-muted-foreground">{row.original.id}</p>
+        </button>
+      ),
+    }),
+    columnHelper.accessor("status", {
+      header: "Status",
+      size: 120,
+      cell: ({ getValue }) => <TranscriptionStatusBadge status={getValue()} />,
+    }),
+    columnHelper.accessor("kind", {
+      header: "Type",
+      size: 120,
+      cell: ({ getValue }) => formatTranscriptionType(getValue()),
+    }),
+    columnHelper.accessor("model", {
+      header: "Model",
+      size: 150,
+      cell: ({ getValue }) => <span className="font-mono text-xs">{getValue()}</span>,
+    }),
+    columnHelper.accessor("languages", {
+      header: "Languages",
+      size: 180,
+      cell: ({ getValue }) => {
+        return formatTranscriptionLanguages(getValue());
+      },
+    }),
+    columnHelper.accessor("fileAudioDuration", {
+      header: "Duration",
+      size: 110,
+      cell: ({ row }) => formatTranscriptionDuration(row.original.fileAudioDuration),
+    }),
+    columnHelper.accessor("createdAt", {
+      header: "Created",
+      size: 190,
+      cell: ({ getValue }) => formatTranscriptionDate(getValue()),
+    }),
+  ]);
+}
 
 type TranscriptionsDataTableProps = {
-  transcriptions: Transcription[];
+  transcriptions: TranscriptionSummary[];
+  selectedTranscriptionId?: string;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => Promise<unknown>;
+  onTranscriptionOpen: (transcriptionId: string) => void;
 };
 
 export function TranscriptionsDataTable({
   transcriptions,
+  selectedTranscriptionId,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
+  onTranscriptionOpen,
 }: TranscriptionsDataTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const columns = useMemo(() => createColumns(onTranscriptionOpen), [onTranscriptionOpen]);
   const table = useTable({
     features,
     columns,
@@ -160,8 +171,10 @@ export function TranscriptionsDataTable({
               return (
                 <TableRow
                   key={row.id}
-                  className="absolute flex h-14 w-full"
+                  className="absolute flex h-14 w-full cursor-pointer data-[state=selected]:bg-muted"
                   data-index={virtualRow.index}
+                  data-state={selectedTranscriptionId === row.original.id ? "selected" : undefined}
+                  onClick={() => onTranscriptionOpen(row.original.id)}
                   style={{ transform: `translateY(${virtualRow.start}px)` }}
                 >
                   {row.getAllCells().map((cell) => (
@@ -207,46 +220,4 @@ export function TranscriptionsDataTable({
       ) : null}
     </div>
   );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status.toLowerCase();
-  const isError = normalizedStatus.includes("error") || normalizedStatus.includes("fail");
-  const isComplete =
-    normalizedStatus.includes("complete") ||
-    normalizedStatus.includes("success") ||
-    normalizedStatus === "done";
-
-  return (
-    <Badge variant={isError ? "destructive" : isComplete ? "secondary" : "outline"}>
-      <span
-        aria-hidden="true"
-        className={
-          isError
-            ? "size-1.5 rounded-full bg-destructive"
-            : isComplete
-              ? "size-1.5 rounded-full bg-emerald-500"
-              : "size-1.5 rounded-full bg-amber-500"
-        }
-      />
-      {formatLabel(status)}
-    </Badge>
-  );
-}
-
-function formatLabel(value: string) {
-  return value.replaceAll(/[_-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
-function formatDuration(seconds: number | null) {
-  if (seconds === null) return "—";
-
-  const roundedSeconds = Math.round(seconds);
-  const hours = Math.floor(roundedSeconds / 3_600);
-  const minutes = Math.floor((roundedSeconds % 3_600) / 60);
-  const remainingSeconds = roundedSeconds % 60;
-
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${remainingSeconds}s`;
-  return `${remainingSeconds}s`;
 }
