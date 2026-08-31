@@ -60,7 +60,11 @@ const columns = columnHelper.columns([
     size: 180,
     cell: ({ getValue }) => {
       const languages = getValue();
-      return languages.length > 0 ? languages.join(", ") : "Auto-detect";
+      return languages.length > 0 ? (
+        languages.join(", ")
+      ) : (
+        <Badge variant="secondary">Auto-detect</Badge>
+      );
     },
   }),
   columnHelper.accessor("fileAudioDuration", {
