@@ -151,10 +151,20 @@ Content-Type: application/json
 <raw JSON file body>
 ```
 
-The backend enforces a 25 MB limit, streams the request into S3-compatible storage, records the
-authoritative number of uploaded bytes, and creates the import in the `queued` state. The
-in-process worker then claims queued imports. Processing is currently a stub until the
-transcription schema is introduced.
+The backend streams the request into S3-compatible storage without buffering the whole file,
+records the authoritative number of uploaded bytes, and creates the import in the `queued` state.
+The in-process worker then validates the stored JSON as a stream, stages normalized transcriptions
+in bounded batches, and atomically merges a successful import into the analytics dataset. Imports
+are incremental: new transcription IDs are appended and equal or newer versions update existing
+rows. Transcriptions absent from an import are preserved.
+
+`processedItems` is updated after each staged batch and is the final item count when processing
+completes. Invalid JSON or transcription data fails the whole import with a structured JSON error;
+staged rows are then removed while the original S3 object remains available for inspection.
+
+This POC deliberately uses one proxied HTTP upload and an in-process polling worker. A production
+version intended for multi-GB files should add resumable S3 multipart uploads, a durable queue,
+worker leases, and asynchronous cleanup for very large failed imports.
 
 Imports are organisation-scoped. Organisation admins may upload files, while all organisation
 members may inspect an import and request a download URL.

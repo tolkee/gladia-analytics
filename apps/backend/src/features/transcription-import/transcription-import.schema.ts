@@ -2,9 +2,9 @@ import { usersTable } from "#schemas/auth";
 import { organisationsTable } from "#schemas/organisation";
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   check,
   index,
-  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -21,9 +21,10 @@ export const transcriptionImportStatusEnum = pgEnum(
   transcriptionImportStatuses,
 );
 
-export type TranscriptionImportValidationError = {
-  path: string;
+export type TranscriptionImportError = {
+  code: string;
   message: string;
+  metadata?: Record<string, unknown>;
 };
 
 export const transcriptionImportsTable = pgTable(
@@ -37,15 +38,10 @@ export const transcriptionImportsTable = pgTable(
     objectKey: text("object_key").notNull(),
     originalFilename: text("original_filename").notNull(),
     contentType: text("content_type").notNull(),
-    sizeBytes: integer("size_bytes").notNull(),
+    sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
     status: transcriptionImportStatusEnum().default("queued").notNull(),
-    phase: text(),
-    processedItems: integer("processed_items").default(0).notNull(),
-    totalItems: integer("total_items"),
-    errorCode: text("error_code"),
-    errorMessage: text("error_message"),
-    validationErrors: jsonb("validation_errors").$type<TranscriptionImportValidationError[]>(),
-    attemptCount: integer("attempt_count").default(0).notNull(),
+    processedItems: bigint("processed_items", { mode: "number" }).default(0).notNull(),
+    error: jsonb().$type<TranscriptionImportError>(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     processingStartedAt: timestamp("processing_started_at", { withTimezone: true }),
@@ -60,10 +56,6 @@ export const transcriptionImportsTable = pgTable(
     index("transcription_imports_status_created_at_idx").on(table.status, table.createdAt),
     check("transcription_imports_size_positive", sql`${table.sizeBytes} > 0`),
     check("transcription_imports_processed_items_positive", sql`${table.processedItems} >= 0`),
-    check(
-      "transcription_imports_total_items_positive",
-      sql`${table.totalItems} IS NULL OR ${table.totalItems} >= 0`,
-    ),
   ],
 );
 

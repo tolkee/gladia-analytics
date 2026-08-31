@@ -11,13 +11,3 @@ export class TranscriptionImportEmptyFileError extends Error {
     this.name = "TranscriptionImportEmptyFileError";
   }
 }
-
-export class TranscriptionImportFileTooLargeError extends Error {
-  constructor(
-    readonly sizeBytes: number,
-    readonly maxSizeBytes: number,
-  ) {
-    super("Transcription import file is too large");
-    this.name = "TranscriptionImportFileTooLargeError";
-  }
-}

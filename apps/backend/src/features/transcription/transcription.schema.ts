@@ -1,4 +1,5 @@
 import { organisationsTable } from "#schemas/organisation";
+import { transcriptionImportsTable } from "#schemas/transcription-import";
 import {
   boolean,
   doublePrecision,
@@ -71,7 +72,9 @@ export const transcriptionsTable = pgTable(
 export const stagedTranscriptionsTable = pgTable(
   "staged_transcriptions",
   {
-    importId: uuid("import_id").notNull(),
+    importId: uuid("import_id")
+      .notNull()
+      .references(() => transcriptionImportsTable.id, { onDelete: "cascade" }),
     ...createTranscriptionColumns(),
   },
   (table) => [

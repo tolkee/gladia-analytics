@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-export const MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES = 25 * 1024 * 1024;
 export const TRANSCRIPTION_IMPORT_CONTENT_TYPE = "application/json";
 
 const transcriptionImportFilenameSchema = z

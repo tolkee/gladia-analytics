@@ -55,17 +55,24 @@ export class TranscriptionImportWorker {
   }
 
   private async process(transcriptionImport: TranscriptionImport): Promise<void> {
-    try {
-      // TODO: Read, validate and persist transcriptions once the transcription schema exists.
-      await this.transcriptionImportService.markProcessingCompleted(transcriptionImport.id);
-      logger.info({ importId: transcriptionImport.id }, "transcription import completed");
-    } catch (error) {
-      logger.error({ error, importId: transcriptionImport.id }, "transcription import failed");
-      await this.transcriptionImportService.markProcessingFailed(
-        transcriptionImport.id,
-        "PROCESSING_FAILED",
-        "The transcription import could not be processed",
+    const result =
+      await this.transcriptionImportService.processTranscriptionImport(transcriptionImport);
+
+    if (result.status === "completed") {
+      logger.info(
+        { importId: transcriptionImport.id, processedItems: result.processedItems },
+        "transcription import completed",
       );
+      return;
     }
+
+    logger.error(
+      {
+        importId: transcriptionImport.id,
+        importError: result.error,
+        cleanupFailed: result.cleanupFailed,
+      },
+      "transcription import failed",
+    );
   }
 }

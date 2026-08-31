@@ -1,9 +1,7 @@
 import {
   createTranscriptionImportHeadersSchema,
   createTranscriptionImportQuerySchema,
-  MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES,
   TranscriptionImportEmptyFileError,
-  TranscriptionImportFileTooLargeError,
   TranscriptionImportNotFoundError,
   transcriptionImportParamsSchema,
   type TranscriptionImportService,
@@ -11,7 +9,6 @@ import {
 import { apiError } from "#lib/errors";
 import { ApiErrorCode } from "@gladia-analytics/common/errors";
 import { Hono, type Context } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import {
   OrganisationNotFoundError,
   OrganisationPermissionDeniedError,
@@ -47,17 +44,6 @@ export function createTranscriptionImportRoutes(
       requestValidator("param", transcriptionImportParamsSchema.omit({ importId: true })),
       requestValidator("query", createTranscriptionImportQuerySchema),
       requestValidator("header", createTranscriptionImportHeadersSchema),
-      bodyLimit({
-        maxSize: MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES,
-        onError: (ctx) =>
-          apiError(
-            ctx,
-            413,
-            ApiErrorCode.TRANSCRIPTION_IMPORT_FILE_TOO_LARGE,
-            "The transcription import file exceeds the 25 MB limit",
-            { maxSizeBytes: MAX_TRANSCRIPTION_IMPORT_SIZE_BYTES },
-          ),
-      }),
       async (ctx) => {
         try {
           const createdImport = await transcriptionImportService.createTranscriptionImport(
@@ -145,19 +131,6 @@ function handleTranscriptionImportError(ctx: Context, error: unknown) {
       400,
       ApiErrorCode.INVALID_REQUEST,
       "The transcription import file must not be empty",
-    );
-  }
-
-  if (error instanceof TranscriptionImportFileTooLargeError) {
-    return apiError(
-      ctx,
-      413,
-      ApiErrorCode.TRANSCRIPTION_IMPORT_FILE_TOO_LARGE,
-      "The transcription import file exceeds the 25 MB limit",
-      {
-        sizeBytes: error.sizeBytes,
-        maxSizeBytes: error.maxSizeBytes,
-      },
     );
   }
 

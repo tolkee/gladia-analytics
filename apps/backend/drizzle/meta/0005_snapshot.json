@@ -1,5 +1,5 @@
 {
-  "id": "090bb38f-00d3-474c-b619-7276d2654a88",
+  "id": "fea758dd-f951-440f-bf27-cdef54b9ef00",
   "prevId": "34c79fdf-1dfb-47f1-8623-cbc26f11972f",
   "version": "7",
   "dialect": "postgresql",
@@ -627,7 +627,7 @@
         },
         "size_bytes": {
           "name": "size_bytes",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -639,49 +639,18 @@
           "notNull": true,
           "default": "'queued'"
         },
-        "phase": {
-          "name": "phase",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "processed_items": {
           "name": "processed_items",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "total_items": {
-          "name": "total_items",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error_code": {
-          "name": "error_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error_message": {
-          "name": "error_message",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "validation_errors": {
-          "name": "validation_errors",
+        "error": {
+          "name": "error",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
-        },
-        "attempt_count": {
-          "name": "attempt_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -800,10 +769,6 @@
         "transcription_imports_processed_items_positive": {
           "name": "transcription_imports_processed_items_positive",
           "value": "\"transcription_imports\".\"processed_items\" >= 0"
-        },
-        "transcription_imports_total_items_positive": {
-          "name": "transcription_imports_total_items_positive",
-          "value": "\"transcription_imports\".\"total_items\" IS NULL OR \"transcription_imports\".\"total_items\" >= 0"
         }
       },
       "isRLSEnabled": false
@@ -966,6 +931,15 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "staged_transcriptions_import_id_transcription_imports_id_fk": {
+          "name": "staged_transcriptions_import_id_transcription_imports_id_fk",
+          "tableFrom": "staged_transcriptions",
+          "tableTo": "transcription_imports",
+          "columnsFrom": ["import_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "staged_transcriptions_organisation_id_organisations_id_fk": {
           "name": "staged_transcriptions_organisation_id_organisations_id_fk",
           "tableFrom": "staged_transcriptions",

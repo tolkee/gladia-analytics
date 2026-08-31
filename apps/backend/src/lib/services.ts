@@ -13,15 +13,17 @@ export type Services = {
 
 export function createServices(db: Db, fileStorage: FileStorage): Services {
   const organisationService = new OrganisationService(db);
+  const transcriptionService = new TranscriptionService(db, organisationService);
 
   return {
     organisationService,
     todoService: new TodoService(db),
-    transcriptionService: new TranscriptionService(db, organisationService),
+    transcriptionService,
     transcriptionImportService: new TranscriptionImportService(
       db,
       fileStorage,
       organisationService,
+      transcriptionService,
     ),
   };
 }

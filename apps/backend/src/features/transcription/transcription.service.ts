@@ -348,12 +348,11 @@ export class TranscriptionService {
     }
 
     const values = [...transcriptionsById.values()];
-    let stagedCount = 0;
 
     if (values.length > 0) {
       await this.db.transaction(async (tx) => {
         for (let start = 0; start < values.length; start += INSERT_CHUNK_SIZE) {
-          const staged = await tx
+          await tx
             .insert(stagedTranscriptionsTable)
             .values(values.slice(start, start + INSERT_CHUNK_SIZE))
             .onConflictDoUpdate({
@@ -364,35 +363,24 @@ export class TranscriptionService {
               ],
               set: transcriptionConflictUpdateSet,
               setWhere: lte(stagedTranscriptionsTable.version, excluded("version")),
-            })
-            .returning({ id: stagedTranscriptionsTable.id });
-
-          stagedCount += staged.length;
+            });
         }
       });
     }
-
-    return {
-      receivedCount: items.length,
-      stagedCount,
-    };
   }
 
   async removeStagedTranscriptions(
     importId: StagedTranscription["importId"],
     organisationId: Organisation["id"],
   ) {
-    const removed = await this.db
+    await this.db
       .delete(stagedTranscriptionsTable)
       .where(
         and(
           eq(stagedTranscriptionsTable.importId, importId),
           eq(stagedTranscriptionsTable.organisationId, organisationId),
         ),
-      )
-      .returning({ id: stagedTranscriptionsTable.id });
-
-    return removed.length;
+      );
   }
 
   async mergeStagedTranscriptions(
@@ -435,27 +423,23 @@ export class TranscriptionService {
           ),
         );
 
-      const merged = await tx
+      await tx
         .insert(transcriptionsTable)
         .select(stagedTranscriptions)
         .onConflictDoUpdate({
           target: [transcriptionsTable.organisationId, transcriptionsTable.id],
           set: transcriptionConflictUpdateSet,
           setWhere: lte(transcriptionsTable.version, excluded("version")),
-        })
-        .returning({ id: transcriptionsTable.id });
+        });
 
-      const removed = await tx
+      await tx
         .delete(stagedTranscriptionsTable)
         .where(
           and(
             eq(stagedTranscriptionsTable.importId, importId),
             eq(stagedTranscriptionsTable.organisationId, organisationId),
           ),
-        )
-        .returning({ id: stagedTranscriptionsTable.id });
-
-      return { mergedCount: merged.length, removedCount: removed.length };
+        );
     });
   }
 }
