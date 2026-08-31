@@ -1,5 +1,4 @@
 export { TranscriptionService } from "./transcription.service.ts";
-export type { CreateTranscriptionsResult, TranscriptionListItem } from "./transcription.service.ts";
 export {
   transcriptionKindEnum,
   transcriptionKinds,

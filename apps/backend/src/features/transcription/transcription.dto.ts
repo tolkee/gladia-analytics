@@ -93,6 +93,11 @@ export const transcriptionParamsSchema = z.object({
   transcriptionId: z.uuid(),
 });
 
+export const transcriptionCursorSchema = z.object({
+  createdAt: sourceTimestampSchema,
+  id: z.uuid(),
+});
+
 export const removeTranscriptionsSchema = z.object({
   ids: z
     .array(z.uuid())

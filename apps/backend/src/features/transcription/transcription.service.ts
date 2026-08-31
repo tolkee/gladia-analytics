@@ -5,17 +5,15 @@ import {
   decodePaginationCursor,
   encodePaginationCursor,
   type CursorPaginationQuery,
-  type Paginated,
 } from "#lib/pagination";
 import { and, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
-import * as z from "zod";
 import type {
   AnalyticsLanguageMode,
-  AnalyticsResponse,
   AnalyticsTimeRange,
   CreateTranscriptionsInput,
   RemoveTranscriptionsInput,
 } from "./transcription.dto";
+import { transcriptionCursorSchema } from "./transcription.dto";
 import { TranscriptionNotFoundError } from "./errors";
 import { ASYNC_HOURLY_RATE_USD, INSERT_CHUNK_SIZE, REALTIME_HOURLY_RATE_USD } from "./constants";
 import {
@@ -29,33 +27,6 @@ import {
 } from "./utils";
 import { transcriptionsTable, type Transcription } from "./transcription.schema";
 
-const transcriptionCursorSchema = z.object({
-  createdAt: z.iso.datetime({ offset: true }),
-  id: z.uuid(),
-});
-
-export type TranscriptionListItem = Pick<
-  Transcription,
-  | "id"
-  | "requestId"
-  | "version"
-  | "status"
-  | "createdAt"
-  | "completedAt"
-  | "errorCode"
-  | "kind"
-  | "fileName"
-  | "fileAudioDuration"
-  | "model"
-  | "languages"
-  | "billableSeconds"
->;
-
-export type CreateTranscriptionsResult = {
-  receivedCount: number;
-  upsertedCount: number;
-};
-
 export class TranscriptionService {
   constructor(
     private readonly db: Db,
@@ -66,7 +37,7 @@ export class TranscriptionService {
     userId: User["id"],
     organisationId: Organisation["id"],
     timeRange: AnalyticsTimeRange,
-  ): Promise<AnalyticsResponse> {
+  ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
     const rangeFilter = and(
@@ -222,7 +193,7 @@ export class TranscriptionService {
     userId: User["id"],
     organisationId: Organisation["id"],
     query: CursorPaginationQuery,
-  ): Promise<Paginated<TranscriptionListItem>> {
+  ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
     const cursor = query.cursor
@@ -282,7 +253,7 @@ export class TranscriptionService {
     userId: User["id"],
     organisationId: Organisation["id"],
     transcriptionId: Transcription["id"],
-  ): Promise<Transcription> {
+  ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
 
     const [transcription] = await this.db
@@ -332,7 +303,7 @@ export class TranscriptionService {
     userId: User["id"],
     organisationId: Organisation["id"],
     input: CreateTranscriptionsInput,
-  ): Promise<CreateTranscriptionsResult> {
+  ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "admin");
 
     const transcriptionsById = new Map(
@@ -387,7 +358,7 @@ export class TranscriptionService {
     userId: User["id"],
     organisationId: Organisation["id"],
     input: RemoveTranscriptionsInput,
-  ): Promise<number> {
+  ) {
     await this.organisationService.isInOrganisation(userId, organisationId, "admin");
 
     if (input.ids.length === 0) return 0;
