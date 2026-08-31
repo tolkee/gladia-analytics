@@ -172,7 +172,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
     );
 }
 
-function handleOrganisationError(ctx: Context, error: unknown) {
+export function handleOrganisationError(ctx: Context, error: unknown) {
   if (error instanceof OrganisationNotFoundError) {
     return apiError(ctx, 404, ApiErrorCode.ORGANISATION_NOT_FOUND, "Organisation not found");
   }
