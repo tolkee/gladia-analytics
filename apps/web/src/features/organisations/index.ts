@@ -1,2 +1,2 @@
 export { createOrganisationMutation } from "./api/create-organisation.mutation";
-export { getUserOrganisationsQuery, type Organisation } from "./api/get-user-organisation.query";
+export { listUserOrganisationsQuery, type Organisation } from "./api/list-user-organisations.query";

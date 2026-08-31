@@ -8,7 +8,7 @@ import {
 import type { Mutation } from "#lib/query";
 import { mutationOptions } from "@tanstack/react-query";
 import type { InferRequestType } from "hono";
-import { getUserOrganisationsQuery } from "./get-user-organisation.query";
+import { listUserOrganisationsQuery } from "./list-user-organisations.query";
 
 const endpoint = apiClient.api.organisations.$post;
 
@@ -35,7 +35,7 @@ const options = (userId: string) =>
     },
     onSuccess: (_data, _variables, _onMutateResult, { client }) => {
       return client.invalidateQueries({
-        queryKey: getUserOrganisationsQuery.key(userId),
+        queryKey: listUserOrganisationsQuery.key(userId),
       });
     },
   });
