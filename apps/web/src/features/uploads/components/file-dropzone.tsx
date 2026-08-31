@@ -74,7 +74,7 @@ export function FileDropzone({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="relative">
       <input
         ref={inputRef}
         id="transcription-upload-file"
@@ -95,16 +95,10 @@ export function FileDropzone({
         className={`flex min-h-80 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 ${
           isDragging
             ? "border-primary bg-primary/5"
-            : file
-              ? "border-emerald-500/50 bg-emerald-500/5"
-              : "border-border bg-muted/20 hover:border-foreground/35 hover:bg-muted/40"
+            : "border-border bg-muted/20 hover:border-foreground/35 hover:bg-muted/40"
         } ${disabled ? "pointer-events-none opacity-60" : ""}`}
       >
-        <span
-          className={`mb-5 flex size-14 items-center justify-center rounded-2xl ${
-            file ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
-          }`}
-        >
+        <span className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <HugeiconsIcon icon={file ? FileCheckIcon : FileUploadIcon} className="size-7" />
         </span>
 
@@ -128,23 +122,22 @@ export function FileDropzone({
       </label>
 
       {file ? (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={disabled}
-            onClick={() => {
-              if (inputRef.current) {
-                inputRef.current.value = "";
-              }
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
+          disabled={disabled}
+          onClick={() => {
+            if (inputRef.current) {
+              inputRef.current.value = "";
+            }
 
-              onFileChange(null);
-            }}
-          >
-            Remove file
-          </Button>
-        </div>
+            onFileChange(null);
+          }}
+        >
+          Remove file
+        </Button>
       ) : null}
     </div>
   );

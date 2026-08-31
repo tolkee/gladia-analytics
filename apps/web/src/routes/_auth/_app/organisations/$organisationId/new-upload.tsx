@@ -90,7 +90,7 @@ function UploadFilePage() {
           <div className="mt-8 flex justify-end">
             <Button type="submit" size="lg" disabled={!file || isPending}>
               {isPending ? <Spinner data-icon="inline-start" /> : null}
-              {isPending ? "Verifying…" : "Continue"}
+              {isPending ? "Verifying…" : "Upload"}
             </Button>
           </div>
         </form>
