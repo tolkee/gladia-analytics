@@ -1,4 +1,5 @@
 import type { Organisation } from "#features/organisation";
+import { sql } from "drizzle-orm";
 import type {
   AnalyticsInterval,
   AnalyticsLanguageMode,
@@ -7,10 +8,6 @@ import type {
   TranscriptionSource,
 } from "./transcription.dto";
 import { transcriptionsTable } from "./transcription.schema";
-
-export const REALTIME_HOURLY_RATE_USD = 0.2;
-export const ASYNC_HOURLY_RATE_USD = 0.12;
-export const INSERT_CHUNK_SIZE = 500;
 
 export function toTranscriptionInsert(
   organisationId: Organisation["id"],
@@ -114,6 +111,10 @@ export function toNumber(value: number | string | null | undefined): number {
 
 export function round(value: number): number {
   return Math.round((value + Number.EPSILON) * 1_000_000) / 1_000_000;
+}
+
+export function excluded(columnName: string) {
+  return sql.raw(`excluded."${columnName}"`);
 }
 
 function floorToInterval(date: Date, interval: AnalyticsInterval): Date {

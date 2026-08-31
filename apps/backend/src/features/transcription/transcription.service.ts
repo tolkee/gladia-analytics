@@ -17,17 +17,16 @@ import type {
   RemoveTranscriptionsInput,
 } from "./transcription.dto";
 import { TranscriptionNotFoundError } from "./errors";
+import { ASYNC_HOURLY_RATE_USD, INSERT_CHUNK_SIZE, REALTIME_HOURLY_RATE_USD } from "./constants";
 import {
-  ASYNC_HOURLY_RATE_USD,
+  excluded,
   fillLanguageModes,
   fillTimeline,
   fillTypes,
-  INSERT_CHUNK_SIZE,
-  REALTIME_HOURLY_RATE_USD,
   round,
   toNumber,
   toTranscriptionInsert,
-} from "./transcription.helpers";
+} from "./utils";
 import { transcriptionsTable, type Transcription } from "./transcription.schema";
 
 const transcriptionCursorSchema = z.object({
@@ -350,30 +349,28 @@ export class TranscriptionService {
             .onConflictDoUpdate({
               target: [transcriptionsTable.organisationId, transcriptionsTable.id],
               set: {
-                requestId: sql.raw('excluded."request_id"'),
-                version: sql.raw('excluded."version"'),
-                status: sql.raw('excluded."status"'),
-                createdAt: sql.raw('excluded."created_at"'),
-                completedAt: sql.raw('excluded."completed_at"'),
-                customMetadata: sql.raw('excluded."custom_metadata"'),
-                errorCode: sql.raw('excluded."error_code"'),
-                kind: sql.raw('excluded."kind"'),
-                fileId: sql.raw('excluded."file_id"'),
-                fileName: sql.raw('excluded."file_name"'),
-                fileSource: sql.raw('excluded."file_source"'),
-                fileAudioDuration: sql.raw('excluded."file_audio_duration"'),
-                fileNumberOfChannels: sql.raw('excluded."file_number_of_channels"'),
-                model: sql.raw('excluded."model"'),
-                detectLanguage: sql.raw('excluded."detect_language"'),
-                languages: sql.raw('excluded."languages"'),
-                codeSwitching: sql.raw('excluded."code_switching"'),
-                resultAudioDuration: sql.raw('excluded."result_audio_duration"'),
-                resultNumberOfDistinctChannels: sql.raw(
-                  'excluded."result_number_of_distinct_channels"',
-                ),
-                resultBillingTime: sql.raw('excluded."result_billing_time"'),
-                resultTranscriptionTime: sql.raw('excluded."result_transcription_time"'),
-                billableSeconds: sql.raw('excluded."billable_seconds"'),
+                requestId: excluded("request_id"),
+                version: excluded("version"),
+                status: excluded("status"),
+                createdAt: excluded("created_at"),
+                completedAt: excluded("completed_at"),
+                customMetadata: excluded("custom_metadata"),
+                errorCode: excluded("error_code"),
+                kind: excluded("kind"),
+                fileId: excluded("file_id"),
+                fileName: excluded("file_name"),
+                fileSource: excluded("file_source"),
+                fileAudioDuration: excluded("file_audio_duration"),
+                fileNumberOfChannels: excluded("file_number_of_channels"),
+                model: excluded("model"),
+                detectLanguage: excluded("detect_language"),
+                languages: excluded("languages"),
+                codeSwitching: excluded("code_switching"),
+                resultAudioDuration: excluded("result_audio_duration"),
+                resultNumberOfDistinctChannels: excluded("result_number_of_distinct_channels"),
+                resultBillingTime: excluded("result_billing_time"),
+                resultTranscriptionTime: excluded("result_transcription_time"),
+                billableSeconds: excluded("billable_seconds"),
               },
             });
         }
