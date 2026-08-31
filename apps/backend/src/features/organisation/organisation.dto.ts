@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const organisationNameSchema = z.string().trim().min(1).max(120);
+const organisationNameSchema = z.string().trim().min(1);
 
 export const createOrganisationSchema = z.object({
   name: organisationNameSchema,

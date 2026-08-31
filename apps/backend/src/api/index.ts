@@ -11,10 +11,12 @@ import { env } from "#lib/env";
 import { apiError } from "#lib/errors";
 import type { ApplyGlobalResponse } from "hono/client";
 import { createOrganisationRoutes } from "./organisation.routes";
+import { createTranscriptionRoutes } from "./transcription.routes";
 
 export function createApi(services: Services) {
   const todoRoutes = createTodoRoutes(services.todoService);
   const organisationRoutes = createOrganisationRoutes(services.organisationService);
+  const transcriptionRoutes = createTranscriptionRoutes(services.transcriptionService);
 
   return new Hono()
     .use(requestId())
@@ -29,6 +31,7 @@ export function createApi(services: Services) {
     .all("/api/auth/*", (ctx) => auth.handler(ctx.req.raw))
     .route("api/todo", todoRoutes)
     .route("/api/organisations", organisationRoutes)
+    .route("/api/organisations", transcriptionRoutes)
     .get("/api/health", (ctx) => {
       return ctx.json({ status: "ok" });
     })
