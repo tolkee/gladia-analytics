@@ -35,6 +35,11 @@ export default defineRailway((ctx) => {
       BETTER_AUTH_SECRET: preserve(),
       GOOGLE_CLIENT_ID: preserve(),
       GOOGLE_CLIENT_SECRET: preserve(),
+      S3_ENDPOINT: preserve(),
+      S3_REGION: preserve(),
+      S3_BUCKET: preserve(),
+      S3_ACCESS_KEY_ID: preserve(),
+      S3_SECRET_ACCESS_KEY: preserve(),
     },
   });
 

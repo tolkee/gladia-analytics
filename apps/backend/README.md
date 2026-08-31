@@ -106,10 +106,19 @@ Be sure also to run the migrations to create the database schema :
 bun run db:migrate
 ```
 
-Then just update the .env file to match your local infra configuration.
+The compose stack also starts a local MinIO S3-compatible server on port `9000`, with its console
+on port `9001`. The `minio-init` service creates the private `gladia-analytics` bucket and configures
+CORS for the Vite development server.
+
+Then update the `.env` file to match the local infrastructure configuration.
 
 ```bash
 DATABASE_URL=postgresql://todo:todo@localhost:5432/todo
+S3_ENDPOINT=http://localhost:9000
+S3_REGION=us-east-1
+S3_BUCKET=gladia-analytics
+S3_ACCESS_KEY_ID=gladia
+S3_SECRET_ACCESS_KEY=gladia-local-secret
 ```
 
 ## Development transcription seed
@@ -130,3 +139,18 @@ bun run db:seed:transcriptions --organisation-id <uuid> --count 250 --seed demo-
 
 Run `bun run db:seed:transcriptions --help` for all options. Re-running the command replaces its
 deterministic seed rows without touching other transcriptions.
+
+## Transcription imports
+
+Transcription JSON files are uploaded directly to S3-compatible storage through a presigned URL:
+
+1. `POST /api/organisations/:organisationId/transcription-imports` creates an import and returns a
+   presigned `PUT` request.
+2. The client uploads the file using the returned method and headers.
+3. `POST /api/organisations/:organisationId/transcription-imports/:importId/complete` verifies the
+   stored object and queues the import.
+4. The in-process worker claims queued imports. Processing is currently a stub until the
+   transcription schema is introduced.
+
+Imports are organisation-scoped. Organisation admins may create and complete uploads, while all
+organisation members may inspect an import and request a download URL.
