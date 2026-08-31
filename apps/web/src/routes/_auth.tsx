@@ -1,3 +1,4 @@
+import { getUserOrganisationsQuery } from "#features/organisations";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth")({
@@ -10,7 +11,14 @@ export const Route = createFileRoute("/_auth")({
       });
     }
 
-    return { user: context.user, session: context.session };
+    const organisations = await context.queryClient.query(
+      getUserOrganisationsQuery.options(context.user.id),
+    );
+    if (organisations.length === 0 && location.pathname !== "/onboarding") {
+      throw redirect({ to: "/onboarding" });
+    }
+
+    return { user: context.user, session: context.session, organisations };
   },
   component: Outlet,
 });
