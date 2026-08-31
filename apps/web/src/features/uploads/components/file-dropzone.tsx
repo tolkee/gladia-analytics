@@ -92,7 +92,7 @@ export function FileDropzone({
         onDragOver={(event) => event.preventDefault()}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`flex min-h-80 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 ${
+        className={`flex min-h-80 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 px-6 py-12 text-center transition-colors peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 ${
           isDragging
             ? "border-primary bg-primary/5"
             : "border-border bg-muted/20 hover:border-foreground/35 hover:bg-muted/40"
