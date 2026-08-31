@@ -27,7 +27,7 @@ export function TranscriptionDetailDrawer({
     >
       <SheetContent
         side="right"
-        className="w-[calc(100%-0.75rem)] max-w-[42rem] gap-0 overflow-hidden rounded-l-2xl data-[side=right]:sm:inset-y-3 data-[side=right]:sm:right-3 data-[side=right]:sm:h-[calc(100%-1.5rem)] data-[side=right]:sm:max-w-2xl data-[side=right]:sm:rounded-2xl data-[side=right]:sm:border before:absolute before:inset-y-5 before:-left-2 before:hidden before:w-2 before:rounded-l-xl before:border before:bg-muted/90 before:content-[''] after:absolute after:inset-y-9 after:-left-4 after:hidden after:w-2 after:rounded-l-lg after:border after:bg-muted/60 after:content-[''] sm:before:block sm:after:block"
+        className="w-full max-w-none gap-0 overflow-hidden rounded-none border-0 data-[side=right]:inset-0 data-[side=right]:h-dvh data-[side=right]:w-full data-[side=right]:sm:inset-y-3 data-[side=right]:sm:right-3 data-[side=right]:sm:left-auto data-[side=right]:sm:h-[calc(100%-1.5rem)] data-[side=right]:sm:max-w-2xl data-[side=right]:sm:rounded-2xl data-[side=right]:sm:border before:absolute before:inset-y-5 before:-left-2 before:hidden before:w-2 before:rounded-l-xl before:border before:bg-muted/90 before:content-[''] after:absolute after:inset-y-9 after:-left-4 after:hidden after:w-2 after:rounded-l-lg after:border after:bg-muted/60 after:content-[''] sm:before:block sm:after:block"
       >
         {transcriptionId ? (
           <TranscriptionDetailContent
