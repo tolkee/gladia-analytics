@@ -1,6 +1,6 @@
 {
-  "id": "f0cd2f39-bfbc-4af5-a69e-418efb45889e",
-  "prevId": "3bed7013-1fa6-4f42-b377-309562220a65",
+  "id": "695ba205-5687-41cb-a397-e55d45864859",
+  "prevId": "fea758dd-f951-440f-bf27-cdef54b9ef00",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -512,6 +512,383 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.transcription_uploads": {
+      "name": "transcription_uploads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "object_key": {
+          "name": "object_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "original_filename": {
+          "name": "original_filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "transcription_upload_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'queued'"
+        },
+        "processed_items": {
+          "name": "processed_items",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "error": {
+          "name": "error",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "processing_started_at": {
+          "name": "processing_started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "transcription_uploads_object_key_uidx": {
+          "name": "transcription_uploads_object_key_uidx",
+          "columns": [
+            {
+              "expression": "object_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transcription_uploads_organisation_created_at_idx": {
+          "name": "transcription_uploads_organisation_created_at_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transcription_uploads_status_created_at_idx": {
+          "name": "transcription_uploads_status_created_at_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "transcription_uploads_organisation_id_organisations_id_fk": {
+          "name": "transcription_uploads_organisation_id_organisations_id_fk",
+          "tableFrom": "transcription_uploads",
+          "tableTo": "organisations",
+          "columnsFrom": ["organisation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "transcription_uploads_created_by_users_id_fk": {
+          "name": "transcription_uploads_created_by_users_id_fk",
+          "tableFrom": "transcription_uploads",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "transcription_uploads_size_positive": {
+          "name": "transcription_uploads_size_positive",
+          "value": "\"transcription_uploads\".\"size_bytes\" > 0"
+        },
+        "transcription_uploads_processed_items_positive": {
+          "name": "transcription_uploads_processed_items_positive",
+          "value": "\"transcription_uploads\".\"processed_items\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.staged_transcriptions": {
+      "name": "staged_transcriptions",
+      "schema": "",
+      "columns": {
+        "upload_id": {
+          "name": "upload_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custom_metadata": {
+          "name": "custom_metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "transcription_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_id": {
+          "name": "file_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_source": {
+          "name": "file_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_audio_duration": {
+          "name": "file_audio_duration",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_number_of_channels": {
+          "name": "file_number_of_channels",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detect_language": {
+          "name": "detect_language",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "languages": {
+          "name": "languages",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code_switching": {
+          "name": "code_switching",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result_audio_duration": {
+          "name": "result_audio_duration",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_number_of_distinct_channels": {
+          "name": "result_number_of_distinct_channels",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_billing_time": {
+          "name": "result_billing_time",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_transcription_time": {
+          "name": "result_transcription_time",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "billable_seconds": {
+          "name": "billable_seconds",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "staged_transcriptions_upload_id_transcription_uploads_id_fk": {
+          "name": "staged_transcriptions_upload_id_transcription_uploads_id_fk",
+          "tableFrom": "staged_transcriptions",
+          "tableTo": "transcription_uploads",
+          "columnsFrom": ["upload_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "staged_transcriptions_organisation_id_organisations_id_fk": {
+          "name": "staged_transcriptions_organisation_id_organisations_id_fk",
+          "tableFrom": "staged_transcriptions",
+          "tableTo": "organisations",
+          "columnsFrom": ["organisation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "staged_transcriptions_upload_id_organisation_id_id_pk": {
+          "name": "staged_transcriptions_upload_id_organisation_id_id_pk",
+          "columns": ["upload_id", "organisation_id", "id"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.transcriptions": {
       "name": "transcriptions",
       "schema": "",
@@ -719,6 +1096,11 @@
       "name": "organisation_role",
       "schema": "public",
       "values": ["owner", "admin", "viewer"]
+    },
+    "public.transcription_upload_status": {
+      "name": "transcription_upload_status",
+      "schema": "public",
+      "values": ["queued", "processing", "completed", "failed"]
     },
     "public.transcription_kind": {
       "name": "transcription_kind",
