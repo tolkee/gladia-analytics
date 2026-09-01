@@ -26,7 +26,7 @@ You can then create a `.env` files `apps/web`:
 VITE_API_URL=http://localhost:3000
 ```
 
-and create a `.env` files `apps/backend`:
+and create a `.env` files `apps/backend` (copy the google credentials from the 1password link given in the mail):
 
 ```bash
 ENV=dev
@@ -39,9 +39,9 @@ BETTER_AUTH_SECRET=imMUGBXXtUILVAcguKxLV4AIhU5kidtE
 BETTER_AUTH_URL=http://localhost:${PORT}
 TRUSTED_ORIGINS=http://localhost:${PORT},http://localhost:5173,http://localhost:5174
 
-# Socials (Google) (Don't worry, these are only used for toy project development)
-GOOGLE_CLIENT_ID=677392554893-6291rj43n3mqjboe1j9ebkbkt6siu3ok.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+# Socials (Google) (Use the one given in the 1password link)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
 # S3-compatible file storage (local defaults target compose MinIO)
 S3_ENDPOINT=http://localhost:9000
