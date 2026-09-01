@@ -1,4 +1,8 @@
-import type { TranscriptionSummary } from "../api/list-transcriptions.query";
+import type {
+  TranscriptionSortField,
+  TranscriptionSorting,
+  TranscriptionSummary,
+} from "../api/list-transcriptions.query";
 import {
   formatTranscriptionDate,
   formatTranscriptionDuration,
@@ -6,6 +10,8 @@ import {
   formatTranscriptionType,
 } from "../transcription-formatters";
 import { TranscriptionStatusBadge } from "./transcription-status-badge";
+import { Badge } from "@gladia-analytics/ui/components/badge";
+import { Button } from "@gladia-analytics/ui/components/button";
 import { Spinner } from "@gladia-analytics/ui/components/spinner";
 import {
   Table,
@@ -15,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@gladia-analytics/ui/components/table";
+import { ArrowDown01Icon, ArrowUp01Icon, ChevronDoubleCloseIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   columnSizingFeature,
   createColumnHelper,
@@ -27,7 +35,20 @@ import { useEffect, useMemo, useRef } from "react";
 const features = tableFeatures({ columnSizingFeature });
 const columnHelper = createColumnHelper<typeof features, TranscriptionSummary>();
 
-function createColumns(onTranscriptionOpen: (transcriptionId: string) => void) {
+const sortFieldByColumnId = {
+  status: "status",
+  kind: "kind",
+  model: "model",
+  languages: "languages",
+  fileAudioDuration: "duration",
+  createdAt: "createdAt",
+} as const satisfies Partial<Record<keyof TranscriptionSummary, TranscriptionSortField>>;
+
+function createColumns(
+  onTranscriptionOpen: (transcriptionId: string) => void,
+  sorting: TranscriptionSorting,
+  onSortingChange: (sorting: TranscriptionSorting) => void,
+) {
   return columnHelper.columns([
     columnHelper.accessor("fileName", {
       header: "Transcription",
@@ -46,43 +67,139 @@ function createColumns(onTranscriptionOpen: (transcriptionId: string) => void) {
             {row.original.fileName ??
               (row.original.kind === "live" ? "Live transcription" : "Untitled audio")}
           </p>
-          <p className="truncate font-mono text-xs text-muted-foreground">{row.original.id}</p>
         </button>
       ),
     }),
     columnHelper.accessor("status", {
-      header: "Status",
+      header: () => (
+        <SortableColumnHeader
+          label="Status"
+          field="status"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 120,
       cell: ({ getValue }) => <TranscriptionStatusBadge status={getValue()} />,
     }),
     columnHelper.accessor("kind", {
-      header: "Type",
+      header: () => (
+        <SortableColumnHeader
+          label="Kind"
+          field="kind"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 120,
       cell: ({ getValue }) => formatTranscriptionType(getValue()),
     }),
     columnHelper.accessor("model", {
-      header: "Model",
+      header: () => (
+        <SortableColumnHeader
+          label="Model"
+          field="model"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 150,
       cell: ({ getValue }) => <span className="font-mono text-xs">{getValue()}</span>,
     }),
     columnHelper.accessor("languages", {
-      header: "Languages",
+      header: () => (
+        <SortableColumnHeader
+          label="Languages"
+          field="languages"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 180,
       cell: ({ getValue }) => {
-        return formatTranscriptionLanguages(getValue());
+        const languages = getValue();
+        const formattedLanguages = formatTranscriptionLanguages(languages);
+
+        return languages.length === 0 ? (
+          <Badge variant="secondary">{formattedLanguages}</Badge>
+        ) : (
+          formattedLanguages
+        );
       },
     }),
     columnHelper.accessor("fileAudioDuration", {
-      header: "Duration",
+      header: () => (
+        <SortableColumnHeader
+          label="Duration"
+          field="duration"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 110,
       cell: ({ row }) => formatTranscriptionDuration(row.original.fileAudioDuration),
     }),
     columnHelper.accessor("createdAt", {
-      header: "Created",
+      header: () => (
+        <SortableColumnHeader
+          label="Created"
+          field="createdAt"
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+        />
+      ),
       size: 190,
       cell: ({ getValue }) => formatTranscriptionDate(getValue()),
     }),
   ]);
+}
+
+type SortableColumnHeaderProps = {
+  label: string;
+  field: TranscriptionSortField;
+  sorting: TranscriptionSorting;
+  onSortingChange: (sorting: TranscriptionSorting) => void;
+};
+
+function SortableColumnHeader({
+  label,
+  field,
+  sorting,
+  onSortingChange,
+}: SortableColumnHeaderProps) {
+  const active = sorting.sort === field && sorting.order !== undefined;
+  const initialOrder = field === "createdAt" ? "desc" : "asc";
+  const nextSorting: TranscriptionSorting = !active
+    ? { sort: field, order: initialOrder }
+    : sorting.order === initialOrder
+      ? { sort: field, order: initialOrder === "asc" ? "desc" : "asc" }
+      : {};
+  const icon = active
+    ? sorting.order === "asc"
+      ? ArrowUp01Icon
+      : ArrowDown01Icon
+    : ChevronDoubleCloseIcon;
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="-ml-2 text-xs"
+      aria-label={
+        active ? `${label}, sorted ${sorting.order}ending` : `${label}, not currently sorted`
+      }
+      onClick={() => onSortingChange(nextSorting)}
+    >
+      {label}
+      <HugeiconsIcon
+        icon={icon}
+        data-icon="inline-end"
+        strokeWidth={2}
+        className={active ? undefined : "rotate-90 text-muted-foreground/60"}
+      />
+    </Button>
+  );
 }
 
 type TranscriptionsDataTableProps = {
@@ -92,6 +209,9 @@ type TranscriptionsDataTableProps = {
   isFetchingNextPage: boolean;
   fetchNextPage: () => Promise<unknown>;
   onTranscriptionOpen: (transcriptionId: string) => void;
+  sorting: TranscriptionSorting;
+  onSortingChange: (sorting: TranscriptionSorting) => void;
+  hasActiveFilters: boolean;
 };
 
 export function TranscriptionsDataTable({
@@ -101,9 +221,16 @@ export function TranscriptionsDataTable({
   isFetchingNextPage,
   fetchNextPage,
   onTranscriptionOpen,
+  sorting,
+  onSortingChange,
+  hasActiveFilters,
 }: TranscriptionsDataTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const columns = useMemo(() => createColumns(onTranscriptionOpen), [onTranscriptionOpen]);
+  const { order, sort } = sorting;
+  const columns = useMemo(
+    () => createColumns(onTranscriptionOpen, { order, sort }, onSortingChange),
+    [onSortingChange, onTranscriptionOpen, order, sort],
+  );
   const table = useTable({
     features,
     columns,
@@ -149,6 +276,7 @@ export function TranscriptionsDataTable({
                   key={header.id}
                   className="flex shrink-0 items-center px-4"
                   scope="col"
+                  aria-sort={getAriaSort(header.column.id, sorting)}
                   style={{ width: header.getSize() }}
                 >
                   {header.isPlaceholder ? null : <table.FlexRender header={header} />}
@@ -197,9 +325,15 @@ export function TranscriptionsDataTable({
                 className="flex w-full flex-col items-center justify-center gap-1 text-center"
                 colSpan={columns.length}
               >
-                <span className="font-medium">No transcriptions in this period</span>
+                <span className="font-medium">
+                  {hasActiveFilters
+                    ? "No transcriptions match these filters"
+                    : "No transcriptions in this period"}
+                </span>
                 <span className="text-xs text-muted-foreground">
-                  Try selecting a longer period to look further back.
+                  {hasActiveFilters
+                    ? "Remove a filter or select a longer period."
+                    : "Try selecting a longer period to look further back."}
                 </span>
               </TableCell>
             </TableRow>
@@ -220,4 +354,15 @@ export function TranscriptionsDataTable({
       ) : null}
     </div>
   );
+}
+
+function getAriaSort(
+  columnId: string,
+  sorting: TranscriptionSorting,
+): "ascending" | "descending" | undefined {
+  const field = sortFieldByColumnId[columnId as keyof typeof sortFieldByColumnId];
+
+  if (field !== sorting.sort || sorting.order === undefined) return undefined;
+
+  return sorting.order === "asc" ? "ascending" : "descending";
 }

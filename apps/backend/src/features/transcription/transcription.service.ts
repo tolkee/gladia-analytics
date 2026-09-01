@@ -1,11 +1,32 @@
 import type { User } from "#features/auth";
 import type { Organisation, OrganisationService } from "#features/organisation";
 import type { Db } from "#lib/db";
-import { decodePaginationCursor, encodePaginationCursor } from "#lib/pagination";
-import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  InvalidPaginationCursorError,
+} from "#lib/pagination";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+  type AnyColumn,
+  type SQL,
+} from "drizzle-orm";
 import type {
   AnalyticsLanguageMode,
   AnalyticsTimeRange,
+  TranscriptionCursor,
+  TranscriptionSortField,
+  TranscriptionSortOrder,
   TranscriptionsQuery,
   TranscriptionSource,
 } from "./transcription.dto";
@@ -52,6 +73,24 @@ const transcriptionConflictUpdateSet = {
   resultTranscriptionTime: excluded("result_transcription_time"),
   billableSeconds: excluded("billable_seconds"),
 };
+
+const transcriptionListSelection = {
+  id: transcriptionsTable.id,
+  requestId: transcriptionsTable.requestId,
+  version: transcriptionsTable.version,
+  status: transcriptionsTable.status,
+  createdAt: transcriptionsTable.createdAt,
+  completedAt: transcriptionsTable.completedAt,
+  errorCode: transcriptionsTable.errorCode,
+  kind: transcriptionsTable.kind,
+  fileName: transcriptionsTable.fileName,
+  fileAudioDuration: transcriptionsTable.fileAudioDuration,
+  model: transcriptionsTable.model,
+  languages: transcriptionsTable.languages,
+  billableSeconds: transcriptionsTable.billableSeconds,
+};
+
+type TranscriptionListItem = Pick<Transcription, keyof typeof transcriptionListSelection>;
 
 export class TranscriptionService {
   constructor(
@@ -225,42 +264,32 @@ export class TranscriptionService {
     const cursor = query.cursor
       ? decodePaginationCursor(query.cursor, transcriptionCursorSchema)
       : null;
-    const cursorFilter = cursor
-      ? or(
-          lt(transcriptionsTable.createdAt, new Date(cursor.createdAt)),
-          and(
-            eq(transcriptionsTable.createdAt, new Date(cursor.createdAt)),
-            lt(transcriptionsTable.id, cursor.id),
-          ),
-        )
-      : undefined;
+    if (
+      cursor &&
+      (cursor.sort !== query.sort ||
+        cursor.order !== query.order ||
+        cursor.kind !== (query.kind ?? null))
+    ) {
+      throw new InvalidPaginationCursorError();
+    }
+
+    const sortColumn = getTranscriptionSortColumn(query.sort);
+    const cursorFilter = cursor ? getTranscriptionCursorFilter(sortColumn, cursor) : undefined;
+    const orderBy = getTranscriptionOrderBy(sortColumn, query.order);
 
     const rows = await this.db
-      .select({
-        id: transcriptionsTable.id,
-        requestId: transcriptionsTable.requestId,
-        version: transcriptionsTable.version,
-        status: transcriptionsTable.status,
-        createdAt: transcriptionsTable.createdAt,
-        completedAt: transcriptionsTable.completedAt,
-        errorCode: transcriptionsTable.errorCode,
-        kind: transcriptionsTable.kind,
-        fileName: transcriptionsTable.fileName,
-        fileAudioDuration: transcriptionsTable.fileAudioDuration,
-        model: transcriptionsTable.model,
-        languages: transcriptionsTable.languages,
-        billableSeconds: transcriptionsTable.billableSeconds,
-      })
+      .select(transcriptionListSelection)
       .from(transcriptionsTable)
       .where(
         and(
           eq(transcriptionsTable.organisationId, organisationId),
           gte(transcriptionsTable.createdAt, query.from),
           lt(transcriptionsTable.createdAt, query.to),
+          query.kind ? eq(transcriptionsTable.kind, query.kind) : undefined,
           cursorFilter,
         ),
       )
-      .orderBy(desc(transcriptionsTable.createdAt), desc(transcriptionsTable.id))
+      .orderBy(...orderBy)
       .limit(query.limit + 1);
 
     const hasNextPage = rows.length > query.limit;
@@ -273,10 +302,9 @@ export class TranscriptionService {
         current: query.cursor ?? null,
         next:
           hasNextPage && lastItem
-            ? encodePaginationCursor({
-                createdAt: lastItem.createdAt.toISOString(),
-                id: lastItem.id,
-              })
+            ? encodePaginationCursor(
+                getTranscriptionCursor(lastItem, query.sort, query.order, query.kind),
+              )
             : null,
       },
     };
@@ -445,5 +473,89 @@ export class TranscriptionService {
           ),
         );
     });
+  }
+}
+
+function getTranscriptionSortColumn(sort: TranscriptionSortField): AnyColumn {
+  switch (sort) {
+    case "status":
+      return transcriptionsTable.status;
+    case "kind":
+      return transcriptionsTable.kind;
+    case "model":
+      return transcriptionsTable.model;
+    case "languages":
+      return transcriptionsTable.languages;
+    case "duration":
+      return transcriptionsTable.fileAudioDuration;
+    case "createdAt":
+      return transcriptionsTable.createdAt;
+  }
+}
+
+function getTranscriptionOrderBy(sortColumn: AnyColumn, order: TranscriptionSortOrder): [SQL, SQL] {
+  const orderExpression = order === "asc" ? asc : desc;
+
+  return [sql`${orderExpression(sortColumn)} nulls last`, orderExpression(transcriptionsTable.id)];
+}
+
+function getTranscriptionCursorFilter(
+  sortColumn: AnyColumn,
+  cursor: TranscriptionCursor,
+): SQL | undefined {
+  const value = cursor.sort === "createdAt" ? new Date(cursor.value) : cursor.value;
+  const compare = cursor.order === "asc" ? gt : lt;
+  const idAfterCursor = compare(transcriptionsTable.id, cursor.id);
+
+  if (value === null) {
+    return and(isNull(sortColumn), idAfterCursor);
+  }
+
+  return or(
+    compare(sortColumn, value),
+    and(eq(sortColumn, value), idAfterCursor),
+    isNull(sortColumn),
+  );
+}
+
+function getTranscriptionCursor(
+  transcription: TranscriptionListItem,
+  sort: TranscriptionSortField,
+  order: TranscriptionSortOrder,
+  kind: TranscriptionsQuery["kind"],
+): TranscriptionCursor {
+  const cursorKind = kind ?? null;
+
+  switch (sort) {
+    case "status":
+      return { sort, order, kind: cursorKind, value: transcription.status, id: transcription.id };
+    case "kind":
+      return { sort, order, kind: cursorKind, value: transcription.kind, id: transcription.id };
+    case "model":
+      return { sort, order, kind: cursorKind, value: transcription.model, id: transcription.id };
+    case "languages":
+      return {
+        sort,
+        order,
+        kind: cursorKind,
+        value: transcription.languages,
+        id: transcription.id,
+      };
+    case "duration":
+      return {
+        sort,
+        order,
+        kind: cursorKind,
+        value: transcription.fileAudioDuration,
+        id: transcription.id,
+      };
+    case "createdAt":
+      return {
+        sort,
+        order,
+        kind: cursorKind,
+        value: transcription.createdAt.toISOString(),
+        id: transcription.id,
+      };
   }
 }

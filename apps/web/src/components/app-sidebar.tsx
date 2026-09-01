@@ -1,8 +1,8 @@
 import {
   AiTranscribeAudioIcon,
   Analytics02Icon,
-  ArrowDown01Icon,
   Building02Icon,
+  ChevronDoubleCloseIcon,
   CloudUploadIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -108,7 +108,11 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
                     <span className="min-w-0 flex-1 truncate text-left font-medium">
                       {organisation.name}
                     </span>
-                    <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-4" />
+                    <HugeiconsIcon
+                      icon={ChevronDoubleCloseIcon}
+                      strokeWidth={2}
+                      className="size-4 rotate-90"
+                    />
                   </SidebarMenuButton>
                 }
               />

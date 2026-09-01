@@ -1,9 +1,12 @@
 import { cursorPaginationQuerySchema } from "#lib/pagination";
 import * as z from "zod";
+import { transcriptionKinds } from "./transcription.schema";
 
 const durationSchema = z.number().finite().nonnegative();
 const channelCountSchema = z.number().int().nonnegative();
 const sourceTimestampSchema = z.iso.datetime({ offset: true });
+export const transcriptionKindSchema = z.enum(transcriptionKinds);
+export type TranscriptionKind = z.infer<typeof transcriptionKindSchema>;
 
 const transcriptionFileSchema = z.object({
   id: z.uuid(),
@@ -44,7 +47,7 @@ export const transcriptionSourceSchema = z.object({
   completed_at: sourceTimestampSchema.nullable(),
   custom_metadata: z.record(z.string(), z.unknown()).nullable(),
   error_code: z.string().nullable(),
-  kind: z.enum(["live", "pre-recorded"]),
+  kind: transcriptionKindSchema,
   file: transcriptionFileSchema.nullable(),
   request_params: transcriptionRequestParamsSchema,
   result: transcriptionResultSchema.nullable(),
@@ -71,7 +74,28 @@ export const timeRangeSchema = timeRangeObjectSchema.refine(
 
 export type TimeRange = z.infer<typeof timeRangeSchema>;
 
-export const transcriptionsQuerySchema = cursorPaginationQuerySchema.and(timeRangeSchema);
+export const transcriptionSortFields = [
+  "status",
+  "kind",
+  "model",
+  "languages",
+  "duration",
+  "createdAt",
+] as const;
+export const transcriptionSortFieldSchema = z.enum(transcriptionSortFields);
+export type TranscriptionSortField = z.infer<typeof transcriptionSortFieldSchema>;
+
+export const transcriptionSortOrders = ["asc", "desc"] as const;
+export const transcriptionSortOrderSchema = z.enum(transcriptionSortOrders);
+export type TranscriptionSortOrder = z.infer<typeof transcriptionSortOrderSchema>;
+
+export const transcriptionsQuerySchema = cursorPaginationQuerySchema.and(timeRangeSchema).and(
+  z.object({
+    kind: transcriptionKindSchema.optional(),
+    sort: transcriptionSortFieldSchema.default("createdAt"),
+    order: transcriptionSortOrderSchema.default("desc"),
+  }),
+);
 export type TranscriptionsQuery = z.infer<typeof transcriptionsQuerySchema>;
 
 export const analyticsTimeRangeSchema = timeRangeObjectSchema
@@ -104,10 +128,39 @@ export const transcriptionParamsSchema = z.object({
   transcriptionId: z.uuid(),
 });
 
-export const transcriptionCursorSchema = z.object({
-  createdAt: sourceTimestampSchema,
+const transcriptionCursorBaseSchema = z.object({
   id: z.uuid(),
+  kind: transcriptionKindSchema.nullable(),
+  order: transcriptionSortOrderSchema,
 });
+
+export const transcriptionCursorSchema = z.discriminatedUnion("sort", [
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("status"),
+    value: z.string(),
+  }),
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("kind"),
+    value: transcriptionKindSchema,
+  }),
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("model"),
+    value: z.string(),
+  }),
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("languages"),
+    value: z.array(z.string()),
+  }),
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("duration"),
+    value: durationSchema.nullable(),
+  }),
+  transcriptionCursorBaseSchema.extend({
+    sort: z.literal("createdAt"),
+    value: sourceTimestampSchema,
+  }),
+]);
+export type TranscriptionCursor = z.infer<typeof transcriptionCursorSchema>;
 
 export type AnalyticsLanguageMode = "auto-detect" | "single-language" | "multiple-languages";
 
