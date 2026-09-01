@@ -95,7 +95,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to update this organisation",
             );
           }
 
@@ -130,7 +130,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to delete this organisation",
             );
           }
 
@@ -193,7 +193,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to add members to this organisation",
             );
           }
 
@@ -251,7 +251,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to update members in this organisation",
             );
           }
 
@@ -307,7 +307,7 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to remove members from this organisation",
             );
           }
 

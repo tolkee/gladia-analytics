@@ -78,7 +78,7 @@ export function createTranscriptionUploadRoutes(
               ctx,
               403,
               ApiErrorCode.ORGANISATION_FORBIDDEN,
-              "You do not have permission to perform this action",
+              "You do not have permission to upload transcriptions to this organisation",
             );
           }
 
