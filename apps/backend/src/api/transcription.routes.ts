@@ -1,4 +1,4 @@
-import { organisationParamsSchema } from "#features/organisation";
+import { OrganisationNotFoundError, organisationParamsSchema } from "#features/organisation";
 import {
   analyticsTimeRangeSchema,
   transcriptionsQuerySchema,
@@ -9,10 +9,9 @@ import {
 import { apiError } from "#lib/errors";
 import { InvalidPaginationCursorError } from "#lib/pagination";
 import { ApiErrorCode } from "@gladia-analytics/common/errors";
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { authGuardMiddleware } from "./middlewares/auth-guard";
 import { requestValidator } from "./middlewares/request-validator";
-import { handleOrganisationError } from "./organisation.routes";
 import type { ApiEnv } from "./types";
 
 export function createTranscriptionRoutes(transcriptionService: TranscriptionService) {
@@ -32,7 +31,16 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
 
           return ctx.json(analytics, 200);
         } catch (error) {
-          return handleTranscriptionError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -51,7 +59,29 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
 
           return ctx.json(transcriptions, 200);
         } catch (error) {
-          return handleTranscriptionError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof InvalidPaginationCursorError) {
+            return apiError(
+              ctx,
+              400,
+              ApiErrorCode.INVALID_REQUEST,
+              "The pagination cursor is invalid",
+              {
+                location: "query",
+                issues: [{ path: ["cursor"], message: "Invalid cursor" }],
+              },
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -71,23 +101,26 @@ export function createTranscriptionRoutes(transcriptionService: TranscriptionSer
 
           return ctx.json(transcription, 200);
         } catch (error) {
-          return handleTranscriptionError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof TranscriptionNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.TRANSCRIPTION_NOT_FOUND,
+              "Transcription not found",
+            );
+          }
+
+          throw error;
         }
       },
     );
-}
-
-function handleTranscriptionError(ctx: Context, error: unknown) {
-  if (error instanceof TranscriptionNotFoundError) {
-    return apiError(ctx, 404, ApiErrorCode.TRANSCRIPTION_NOT_FOUND, "Transcription not found");
-  }
-
-  if (error instanceof InvalidPaginationCursorError) {
-    return apiError(ctx, 400, ApiErrorCode.INVALID_REQUEST, "The pagination cursor is invalid", {
-      location: "query",
-      issues: [{ path: ["cursor"], message: "Invalid cursor" }],
-    });
-  }
-
-  return handleOrganisationError(ctx, error);
 }

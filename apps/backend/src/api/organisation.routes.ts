@@ -5,6 +5,7 @@ import {
   OrganisationMemberNotFoundError,
   OrganisationMemberUserNotFoundError,
   OrganisationNotFoundError,
+  OrganisationOwnerImmutableError,
   organisationMemberParamsSchema,
   organisationParamsSchema,
   OrganisationPermissionDeniedError,
@@ -14,7 +15,7 @@ import {
 } from "#features/organisation";
 import { apiError } from "#lib/errors";
 import { ApiErrorCode } from "@gladia-analytics/common/errors";
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { authGuardMiddleware } from "./middlewares/auth-guard";
 import { requestValidator } from "./middlewares/request-validator";
 import type { ApiEnv } from "./types";
@@ -52,7 +53,16 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.json(organisation, 200);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -71,7 +81,25 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.json(organisation, 200);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof OrganisationPermissionDeniedError) {
+            return apiError(
+              ctx,
+              403,
+              ApiErrorCode.ORGANISATION_FORBIDDEN,
+              "You do not have permission to update this organisation",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -88,7 +116,25 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.body(null, 204);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof OrganisationPermissionDeniedError) {
+            return apiError(
+              ctx,
+              403,
+              ApiErrorCode.ORGANISATION_FORBIDDEN,
+              "You do not have permission to delete this organisation",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -105,7 +151,16 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.json(members, 200);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -124,7 +179,43 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.json(member, 201);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof OrganisationPermissionDeniedError) {
+            return apiError(
+              ctx,
+              403,
+              ApiErrorCode.ORGANISATION_FORBIDDEN,
+              "You do not have permission to add members to this organisation",
+            );
+          }
+
+          if (error instanceof OrganisationMemberUserNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_MEMBER_USER_NOT_FOUND,
+              "The selected user could not be found",
+            );
+          }
+
+          if (error instanceof OrganisationMemberAlreadyExistsError) {
+            return apiError(
+              ctx,
+              409,
+              ApiErrorCode.ORGANISATION_MEMBER_ALREADY_EXISTS,
+              "This user is already a member of the organisation",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -146,7 +237,43 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.json(member, 200);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof OrganisationPermissionDeniedError) {
+            return apiError(
+              ctx,
+              403,
+              ApiErrorCode.ORGANISATION_FORBIDDEN,
+              "You do not have permission to update members in this organisation",
+            );
+          }
+
+          if (error instanceof OrganisationOwnerImmutableError) {
+            return apiError(
+              ctx,
+              409,
+              ApiErrorCode.ORGANISATION_OWNER_IMMUTABLE,
+              "The organisation owner cannot be modified",
+            );
+          }
+
+          if (error instanceof OrganisationMemberNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_MEMBER_NOT_FOUND,
+              "Member not found",
+            );
+          }
+
+          throw error;
         }
       },
     )
@@ -166,47 +293,44 @@ export function createOrganisationRoutes(organisationService: OrganisationServic
 
           return ctx.body(null, 204);
         } catch (error) {
-          return handleOrganisationError(ctx, error);
+          if (error instanceof OrganisationNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_NOT_FOUND,
+              "Organisation not found",
+            );
+          }
+
+          if (error instanceof OrganisationPermissionDeniedError) {
+            return apiError(
+              ctx,
+              403,
+              ApiErrorCode.ORGANISATION_FORBIDDEN,
+              "You do not have permission to remove members from this organisation",
+            );
+          }
+
+          if (error instanceof OrganisationOwnerImmutableError) {
+            return apiError(
+              ctx,
+              409,
+              ApiErrorCode.ORGANISATION_OWNER_IMMUTABLE,
+              "The organisation owner cannot be modified",
+            );
+          }
+
+          if (error instanceof OrganisationMemberNotFoundError) {
+            return apiError(
+              ctx,
+              404,
+              ApiErrorCode.ORGANISATION_MEMBER_NOT_FOUND,
+              "Member not found",
+            );
+          }
+
+          throw error;
         }
       },
     );
-}
-
-export function handleOrganisationError(ctx: Context, error: unknown) {
-  if (error instanceof OrganisationNotFoundError) {
-    return apiError(ctx, 404, ApiErrorCode.ORGANISATION_NOT_FOUND, "Organisation not found");
-  }
-
-  if (error instanceof OrganisationPermissionDeniedError) {
-    return apiError(
-      ctx,
-      403,
-      ApiErrorCode.ORGANISATION_FORBIDDEN,
-      "You do not have permission to perform this action",
-    );
-  }
-
-  if (error instanceof OrganisationMemberNotFoundError) {
-    return apiError(ctx, 404, ApiErrorCode.ORGANISATION_MEMBER_NOT_FOUND, "Member not found");
-  }
-
-  if (error instanceof OrganisationMemberUserNotFoundError) {
-    return apiError(
-      ctx,
-      404,
-      ApiErrorCode.ORGANISATION_MEMBER_USER_NOT_FOUND,
-      "The selected user could not be found",
-    );
-  }
-
-  if (error instanceof OrganisationMemberAlreadyExistsError) {
-    return apiError(
-      ctx,
-      409,
-      ApiErrorCode.ORGANISATION_MEMBER_ALREADY_EXISTS,
-      "This user is already a member of the organisation",
-    );
-  }
-
-  throw error;
 }
