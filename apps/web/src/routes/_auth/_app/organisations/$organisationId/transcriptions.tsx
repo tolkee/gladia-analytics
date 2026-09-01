@@ -1,25 +1,33 @@
 import {
   PeriodPicker,
   TranscriptionDetailDrawer,
+  TranscriptionFilters,
   TranscriptionsDataTable,
+  defaultTranscriptionListOptions,
   getPeriodRange,
   listTranscriptionsQuery,
   periodSearchSchema,
   periodSelectionFromSearch,
+  transcriptionKinds,
+  transcriptionSortFields,
+  transcriptionSortOrders,
   type PeriodSelection,
+  type TranscriptionKind,
+  type TranscriptionListOptions,
+  type TranscriptionSorting,
 } from "#features/transcriptions";
-import { Button } from "@gladia-analytics/ui/components/button";
 import { Skeleton } from "@gladia-analytics/ui/components/skeleton";
-import { FilterIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import * as z from "zod";
 
 const transcriptionsSearchSchema = periodSearchSchema.and(
   z.object({
     transcriptionId: z.uuid().optional(),
+    kind: z.enum(transcriptionKinds).optional(),
+    sort: z.enum(transcriptionSortFields).optional(),
+    order: z.enum(transcriptionSortOrders).optional(),
   }),
 );
 
@@ -27,7 +35,13 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
   validateSearch: transcriptionsSearchSchema,
   loaderDeps: ({ search }) => {
     const selection = periodSelectionFromSearch(search);
-    return { selection, range: getPeriodRange(selection) };
+    const listOptions: TranscriptionListOptions = {
+      ...(search.kind ? { kind: search.kind } : {}),
+      sort: search.sort ?? defaultTranscriptionListOptions.sort,
+      order: search.order ?? defaultTranscriptionListOptions.order,
+    };
+
+    return { selection, range: getPeriodRange(selection), listOptions };
   },
   loader: async ({ context, deps, params }) => {
     await context.queryClient.fetchInfiniteQuery(
@@ -36,6 +50,7 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
         params.organisationId,
         deps.selection,
         deps.range,
+        deps.listOptions,
       ),
     );
   },
@@ -45,36 +60,77 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
 
 function TranscriptionsPage() {
   const { organisation, user } = Route.useRouteContext();
-  const { transcriptionId } = Route.useSearch();
-  const { range, selection } = Route.useLoaderDeps();
+  const { order, sort, transcriptionId } = Route.useSearch();
+  const { listOptions, range, selection } = Route.useLoaderDeps();
   const navigate = Route.useNavigate();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(
-    listTranscriptionsQuery.options(user.id, organisation.id, selection, range),
+    listTranscriptionsQuery.options(user.id, organisation.id, selection, range, listOptions),
   );
   const transcriptions = useMemo(() => data.pages.flatMap((page) => page.data), [data.pages]);
 
-  function openTranscription(nextTranscriptionId: string) {
-    void navigate({
-      search: (previous) => ({ ...previous, transcriptionId: nextTranscriptionId }),
-      replace: transcriptionId !== undefined,
-    });
-  }
+  const openTranscription = useCallback(
+    (nextTranscriptionId: string) => {
+      void navigate({
+        search: (previous) => ({ ...previous, transcriptionId: nextTranscriptionId }),
+        replace: transcriptionId !== undefined,
+      });
+    },
+    [navigate, transcriptionId],
+  );
 
-  function closeTranscription() {
+  const closeTranscription = useCallback(() => {
     void navigate({
       search: (previous) => ({ ...previous, transcriptionId: undefined }),
       replace: true,
     });
-  }
+  }, [navigate]);
 
-  function selectPeriod(nextSelection: PeriodSelection) {
-    void navigate({
-      search:
-        nextSelection.type === "preset"
-          ? { period: nextSelection.period }
-          : { from: nextSelection.from, to: nextSelection.to },
-    });
-  }
+  const selectPeriod = useCallback(
+    (nextSelection: PeriodSelection) => {
+      void navigate({
+        search: (previous) =>
+          nextSelection.type === "preset"
+            ? {
+                ...previous,
+                period: nextSelection.period,
+                from: undefined,
+                to: undefined,
+                transcriptionId: undefined,
+              }
+            : {
+                ...previous,
+                period: undefined,
+                from: nextSelection.from,
+                to: nextSelection.to,
+                transcriptionId: undefined,
+              },
+      });
+    },
+    [navigate],
+  );
+
+  const changeKind = useCallback(
+    (kind: TranscriptionKind | undefined) => {
+      void navigate({
+        search: (previous) => ({ ...previous, kind, transcriptionId: undefined }),
+      });
+    },
+    [navigate],
+  );
+
+  const changeSorting = useCallback(
+    (sorting: TranscriptionSorting) => {
+      void navigate({
+        search: (previous) => ({
+          ...previous,
+          sort: sorting.sort,
+          order: sorting.order,
+          transcriptionId: undefined,
+        }),
+      });
+    },
+    [navigate],
+  );
 
   return (
     <section className="flex h-[calc(100svh-var(--header-height))] min-h-0 flex-col gap-3 p-4">
@@ -83,10 +139,7 @@ function TranscriptionsPage() {
         aria-label="Transcription actions"
         className="flex flex-wrap items-center gap-2"
       >
-        <Button type="button" variant="outline" size="sm" disabled>
-          <HugeiconsIcon icon={FilterIcon} data-icon="inline-start" strokeWidth={2} />
-          Add filters
-        </Button>
+        <TranscriptionFilters kind={listOptions.kind} onKindChange={changeKind} />
 
         <PeriodPicker
           value={selection}
@@ -103,6 +156,9 @@ function TranscriptionsPage() {
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={fetchNextPage}
         onTranscriptionOpen={openTranscription}
+        sorting={{ order, sort }}
+        onSortingChange={changeSorting}
+        hasActiveFilters={listOptions.kind !== undefined}
       />
 
       <TranscriptionDetailDrawer

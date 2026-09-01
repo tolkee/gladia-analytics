@@ -1,8 +1,12 @@
 import type { User } from "#features/auth";
 import type { Organisation, OrganisationService } from "#features/organisation";
 import type { Db } from "#lib/db";
-import { decodePaginationCursor, encodePaginationCursor } from "#lib/pagination";
-import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
+import {
+  decodePaginationCursor,
+  encodePaginationCursor,
+  InvalidPaginationCursorError,
+} from "#lib/pagination";
+import { and, desc, eq, gte, lt, lte, sql } from "drizzle-orm";
 import type {
   AnalyticsLanguageMode,
   AnalyticsTimeRange,
@@ -17,6 +21,10 @@ import {
   fillLanguageModes,
   fillTimeline,
   fillTypes,
+  getTranscriptionCursor,
+  getTranscriptionCursorFilter,
+  getTranscriptionOrderBy,
+  getTranscriptionSortColumn,
   round,
   toNumber,
   toTranscriptionInsert,
@@ -225,15 +233,18 @@ export class TranscriptionService {
     const cursor = query.cursor
       ? decodePaginationCursor(query.cursor, transcriptionCursorSchema)
       : null;
-    const cursorFilter = cursor
-      ? or(
-          lt(transcriptionsTable.createdAt, new Date(cursor.createdAt)),
-          and(
-            eq(transcriptionsTable.createdAt, new Date(cursor.createdAt)),
-            lt(transcriptionsTable.id, cursor.id),
-          ),
-        )
-      : undefined;
+    if (
+      cursor &&
+      (cursor.sort !== query.sort ||
+        cursor.order !== query.order ||
+        cursor.kind !== (query.kind ?? null))
+    ) {
+      throw new InvalidPaginationCursorError();
+    }
+
+    const sortColumn = getTranscriptionSortColumn(query.sort);
+    const cursorFilter = cursor ? getTranscriptionCursorFilter(sortColumn, cursor) : undefined;
+    const orderBy = getTranscriptionOrderBy(sortColumn, query.order);
 
     const rows = await this.db
       .select({
@@ -257,10 +268,11 @@ export class TranscriptionService {
           eq(transcriptionsTable.organisationId, organisationId),
           gte(transcriptionsTable.createdAt, query.from),
           lt(transcriptionsTable.createdAt, query.to),
+          query.kind ? eq(transcriptionsTable.kind, query.kind) : undefined,
           cursorFilter,
         ),
       )
-      .orderBy(desc(transcriptionsTable.createdAt), desc(transcriptionsTable.id))
+      .orderBy(...orderBy)
       .limit(query.limit + 1);
 
     const hasNextPage = rows.length > query.limit;
@@ -273,10 +285,9 @@ export class TranscriptionService {
         current: query.cursor ?? null,
         next:
           hasNextPage && lastItem
-            ? encodePaginationCursor({
-                createdAt: lastItem.createdAt.toISOString(),
-                id: lastItem.id,
-              })
+            ? encodePaginationCursor(
+                getTranscriptionCursor(lastItem, query.sort, query.order, query.kind),
+              )
             : null,
       },
     };

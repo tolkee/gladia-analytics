@@ -29,5 +29,7 @@ export function formatTranscriptionType(kind: "live" | "pre-recorded") {
 }
 
 export function formatTranscriptionLanguages(languages: string[]) {
-  return languages.length > 0 ? languages.join(", ") : "Auto-detect";
+  return languages.length > 0
+    ? languages.map((language) => language.toUpperCase()).join(", ")
+    : "Auto-detect";
 }
