@@ -2,7 +2,6 @@ import {
   createTranscriptionUploadHeadersSchema,
   createTranscriptionUploadQuerySchema,
   TranscriptionUploadEmptyFileError,
-  TranscriptionUploadNotFoundError,
   transcriptionUploadParamsSchema,
   type TranscriptionUploadService,
 } from "#features/transcription-upload";
@@ -88,83 +87,6 @@ export function createTranscriptionUploadRoutes(
               400,
               ApiErrorCode.INVALID_REQUEST,
               "The transcription upload file must not be empty",
-            );
-          }
-
-          throw error;
-        }
-      },
-    )
-    .get(
-      "/:organisationId/transcription-uploads/:uploadId",
-      authGuardMiddleware,
-      requestValidator("param", transcriptionUploadParamsSchema),
-      async (ctx) => {
-        const params = ctx.req.valid("param");
-
-        try {
-          const transcriptionUpload = await transcriptionUploadService.getTranscriptionUpload(
-            ctx.get("user").id,
-            params.organisationId,
-            params.uploadId,
-          );
-
-          return ctx.json(transcriptionUpload, 200);
-        } catch (error) {
-          if (error instanceof OrganisationNotFoundError) {
-            return apiError(
-              ctx,
-              404,
-              ApiErrorCode.ORGANISATION_NOT_FOUND,
-              "Organisation not found",
-            );
-          }
-
-          if (error instanceof TranscriptionUploadNotFoundError) {
-            return apiError(
-              ctx,
-              404,
-              ApiErrorCode.TRANSCRIPTION_UPLOAD_NOT_FOUND,
-              "Transcription upload not found",
-            );
-          }
-
-          throw error;
-        }
-      },
-    )
-    .get(
-      "/:organisationId/transcription-uploads/:uploadId/download",
-      authGuardMiddleware,
-      requestValidator("param", transcriptionUploadParamsSchema),
-      async (ctx) => {
-        const params = ctx.req.valid("param");
-
-        try {
-          const download = await transcriptionUploadService.createDownloadRequest(
-            ctx.get("user").id,
-            params.organisationId,
-            params.uploadId,
-          );
-
-          ctx.header("Cache-Control", "no-store");
-          return ctx.json(download, 200);
-        } catch (error) {
-          if (error instanceof OrganisationNotFoundError) {
-            return apiError(
-              ctx,
-              404,
-              ApiErrorCode.ORGANISATION_NOT_FOUND,
-              "Organisation not found",
-            );
-          }
-
-          if (error instanceof TranscriptionUploadNotFoundError) {
-            return apiError(
-              ctx,
-              404,
-              ApiErrorCode.TRANSCRIPTION_UPLOAD_NOT_FOUND,
-              "Transcription upload not found",
             );
           }
 

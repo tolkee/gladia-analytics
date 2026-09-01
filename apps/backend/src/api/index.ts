@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { createTodoRoutes } from "./todo.routes";
 import type { Services } from "#lib/services";
 import { auth } from "#features/auth";
 import { authContextMiddleware } from "./middlewares/auth-context";
@@ -16,7 +15,6 @@ import { createTranscriptionRoutes } from "./transcription.routes";
 import type { ApiEnv } from "./types";
 
 export function createApi(services: Services) {
-  const todoRoutes = createTodoRoutes(services.todoService);
   const organisationRoutes = createOrganisationRoutes(services.organisationService);
   const transcriptionRoutes = createTranscriptionRoutes(services.transcriptionService);
   const transcriptionUploadRoutes = createTranscriptionUploadRoutes(
@@ -34,7 +32,6 @@ export function createApi(services: Services) {
     .use(loggerMiddleware)
     .use(authContextMiddleware)
     .all("/api/auth/*", (ctx) => auth.handler(ctx.req.raw))
-    .route("api/todo", todoRoutes)
     .route("/api/organisations", organisationRoutes)
     .route("/api/organisations", transcriptionRoutes)
     .route("/api/organisations", transcriptionUploadRoutes)
