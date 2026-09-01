@@ -1,5 +1,5 @@
 import { JSONParser } from "@streamparser/json-whatwg";
-import { TranscriptionUploadProcessingError } from "./transcription-upload.processing";
+import { TranscriptionUploadProcessingError } from "./errors";
 
 const PARSER_BUFFER_SIZE_BYTES = 64 * 1024;
 
