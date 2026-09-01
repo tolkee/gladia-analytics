@@ -61,22 +61,6 @@ const transcriptionConflictUpdateSet = {
   billableSeconds: excluded("billable_seconds"),
 };
 
-const transcriptionListSelection = {
-  id: transcriptionsTable.id,
-  requestId: transcriptionsTable.requestId,
-  version: transcriptionsTable.version,
-  status: transcriptionsTable.status,
-  createdAt: transcriptionsTable.createdAt,
-  completedAt: transcriptionsTable.completedAt,
-  errorCode: transcriptionsTable.errorCode,
-  kind: transcriptionsTable.kind,
-  fileName: transcriptionsTable.fileName,
-  fileAudioDuration: transcriptionsTable.fileAudioDuration,
-  model: transcriptionsTable.model,
-  languages: transcriptionsTable.languages,
-  billableSeconds: transcriptionsTable.billableSeconds,
-};
-
 export class TranscriptionService {
   constructor(
     private readonly db: Db,
@@ -263,7 +247,21 @@ export class TranscriptionService {
     const orderBy = getTranscriptionOrderBy(sortColumn, query.order);
 
     const rows = await this.db
-      .select(transcriptionListSelection)
+      .select({
+        id: transcriptionsTable.id,
+        requestId: transcriptionsTable.requestId,
+        version: transcriptionsTable.version,
+        status: transcriptionsTable.status,
+        createdAt: transcriptionsTable.createdAt,
+        completedAt: transcriptionsTable.completedAt,
+        errorCode: transcriptionsTable.errorCode,
+        kind: transcriptionsTable.kind,
+        fileName: transcriptionsTable.fileName,
+        fileAudioDuration: transcriptionsTable.fileAudioDuration,
+        model: transcriptionsTable.model,
+        languages: transcriptionsTable.languages,
+        billableSeconds: transcriptionsTable.billableSeconds,
+      })
       .from(transcriptionsTable)
       .where(
         and(
