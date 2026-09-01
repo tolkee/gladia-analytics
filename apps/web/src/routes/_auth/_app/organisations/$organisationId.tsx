@@ -22,7 +22,7 @@ function OrganisationAppLayout() {
   const { organisation, organisations } = Route.useRouteContext();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar organisations={organisations} organisation={organisation} />
       <SidebarInset className="min-w-0">
         <AppSiteHeader organisation={organisation} />
