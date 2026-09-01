@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gladia Analytics Development"
+  short_description: "Develop the Gladia Analytics monorepo"
+  default_prompt: "Use $gladia-analytics-development to make a repository change following its architecture and conventions."
