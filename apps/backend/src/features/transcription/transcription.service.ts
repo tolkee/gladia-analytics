@@ -64,7 +64,7 @@ export class TranscriptionService {
     organisationId: Organisation["id"],
     timeRange: AnalyticsTimeRange,
   ) {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const rangeFilter = and(
       eq(transcriptionsTable.organisationId, organisationId),
@@ -220,7 +220,7 @@ export class TranscriptionService {
     organisationId: Organisation["id"],
     query: TranscriptionsQuery,
   ) {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const cursor = query.cursor
       ? decodePaginationCursor(query.cursor, transcriptionCursorSchema)
@@ -287,7 +287,7 @@ export class TranscriptionService {
     organisationId: Organisation["id"],
     transcriptionId: Transcription["id"],
   ) {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const [transcription] = await this.db
       .select({

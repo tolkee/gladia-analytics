@@ -47,7 +47,7 @@ export class TranscriptionUploadService {
     input: CreateTranscriptionUploadInput,
     file: Request,
   ): Promise<CreatedTranscriptionUpload> {
-    await this.organisationService.isInOrganisation(userId, organisationId, "admin");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "admin");
 
     const id = crypto.randomUUID();
     const objectKey = `organisations/${organisationId}/transcription-uploads/${id}.json`;
@@ -93,7 +93,7 @@ export class TranscriptionUploadService {
     userId: User["id"],
     organisationId: Organisation["id"],
   ): Promise<TranscriptionUploadDetails[]> {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const uploads = await this.db
       .select()
@@ -109,7 +109,7 @@ export class TranscriptionUploadService {
     organisationId: Organisation["id"],
     uploadId: TranscriptionUpload["id"],
   ): Promise<TranscriptionUploadDetails> {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const transcriptionUpload = await this.findTranscriptionUpload(organisationId, uploadId);
 
@@ -121,7 +121,7 @@ export class TranscriptionUploadService {
     organisationId: Organisation["id"],
     uploadId: TranscriptionUpload["id"],
   ): Promise<PresignedDownloadRequest> {
-    await this.organisationService.isInOrganisation(userId, organisationId, "viewer");
+    await this.organisationService.assertOrganisationAccess(userId, organisationId, "viewer");
 
     const transcriptionUpload = await this.findTranscriptionUpload(organisationId, uploadId);
 

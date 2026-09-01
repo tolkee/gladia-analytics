@@ -45,7 +45,7 @@ const organisationRoleRank: Record<OrganisationRole, number> = {
 export class OrganisationService {
   constructor(private readonly db: Db) {}
 
-  async isInOrganisation(
+  async assertOrganisationAccess(
     userId: User["id"],
     organisationId: Organisation["id"],
     requiredRole: OrganisationRole = "viewer",
@@ -76,7 +76,7 @@ export class OrganisationService {
     userId: User["id"],
     organisationId: Organisation["id"],
   ): Promise<UserOrganisation> {
-    const role = await this.isInOrganisation(userId, organisationId, "viewer");
+    const role = await this.assertOrganisationAccess(userId, organisationId, "viewer");
     const [organisation] = await this.db
       .select()
       .from(organisationsTable)
@@ -118,7 +118,7 @@ export class OrganisationService {
   }
 
   async deleteOrganisation(userId: User["id"], organisationId: Organisation["id"]): Promise<void> {
-    await this.isInOrganisation(userId, organisationId, "owner");
+    await this.assertOrganisationAccess(userId, organisationId, "owner");
 
     await this.db
       .delete(organisationsTable)
@@ -132,7 +132,7 @@ export class OrganisationService {
     organisationId: Organisation["id"],
     updates: UpdateOrganisationInput,
   ): Promise<UserOrganisation> {
-    const role = await this.isInOrganisation(userId, organisationId, "admin");
+    const role = await this.assertOrganisationAccess(userId, organisationId, "admin");
 
     const [organisation] = await this.db
       .update(organisationsTable)
@@ -169,7 +169,7 @@ export class OrganisationService {
     userId: User["id"],
     organisationId: Organisation["id"],
   ): Promise<OrganisationMemberDetails[]> {
-    await this.isInOrganisation(userId, organisationId, "viewer");
+    await this.assertOrganisationAccess(userId, organisationId, "viewer");
 
     return this.db
       .select({
@@ -191,7 +191,7 @@ export class OrganisationService {
     organisationId: Organisation["id"],
     input: AddOrganisationMemberInput,
   ): Promise<OrganisationMemberDetails> {
-    await this.isInOrganisation(userId, organisationId, "admin");
+    await this.assertOrganisationAccess(userId, organisationId, "admin");
 
     const [memberUser] = await this.db
       .select()
@@ -228,7 +228,7 @@ export class OrganisationService {
     organisationId: Organisation["id"],
     memberUserId: User["id"],
   ): Promise<void> {
-    await this.isInOrganisation(userId, organisationId, "admin");
+    await this.assertOrganisationAccess(userId, organisationId, "admin");
     await this.assertIsNotOwner(organisationId, memberUserId);
 
     const [removedMember] = await this.db
@@ -252,7 +252,7 @@ export class OrganisationService {
     memberUserId: User["id"],
     updates: UpdateOrganisationMemberInput,
   ): Promise<OrganisationMemberDetails> {
-    await this.isInOrganisation(userId, organisationId, "admin");
+    await this.assertOrganisationAccess(userId, organisationId, "admin");
     await this.assertIsNotOwner(organisationId, memberUserId);
 
     const [membership] = await this.db
