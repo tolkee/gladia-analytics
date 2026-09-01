@@ -2,7 +2,7 @@ import { Button } from "@gladia-analytics/ui/components/button";
 import { Cancel01Icon, FileCheckIcon, FileUploadIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRef, useState, type DragEvent } from "react";
-import { formatFileSize } from "../utils";
+import { formatFileSize, getTranscriptionUploadFileError } from "../utils";
 
 type FileDropzoneProps = {
   file: File | null;
@@ -28,15 +28,14 @@ export function FileDropzone({
       return;
     }
 
-    const isJson =
-      selectedFile.type === "application/json" || selectedFile.name.toLowerCase().endsWith(".json");
+    const validationError = getTranscriptionUploadFileError(selectedFile);
 
-    if (!isJson) {
+    if (validationError) {
       if (inputRef.current) {
         inputRef.current.value = "";
       }
 
-      onInvalidFile("Select a JSON file containing transcription data.");
+      onInvalidFile(validationError);
       return;
     }
 

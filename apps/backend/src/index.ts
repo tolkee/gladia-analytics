@@ -5,6 +5,7 @@ import { db } from "#lib/db";
 import { S3Client } from "bun";
 import { S3Storage } from "#features/transcription-upload";
 import { TranscriptionUploadWorker } from "./workers/transcription-upload.worker";
+import { TRANSCRIPTION_UPLOAD_MAX_SIZE_BYTES } from "@gladia-analytics/common/constants";
 
 const s3Client = new S3Client({
   endpoint: env.S3_ENDPOINT,
@@ -25,5 +26,6 @@ transcriptionUploadWorker.start();
 
 Bun.serve({
   port: env.PORT,
+  maxRequestBodySize: TRANSCRIPTION_UPLOAD_MAX_SIZE_BYTES,
   fetch: api.fetch,
 });

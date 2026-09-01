@@ -153,6 +153,8 @@ Content-Type: application/json
 
 The backend streams the request into S3-compatible storage without buffering the whole file,
 records the authoritative number of uploaded bytes, and creates the upload in the `queued` state.
+Upload request bodies are limited to 128 MiB. The web client rejects larger files before starting
+the request, while Bun enforces the same boundary for other API clients.
 The in-process worker then validates the stored JSON as a stream, stages normalized transcriptions
 in bounded batches, and atomically merges a successful upload into the analytics dataset. Uploads
 are incremental: new transcription IDs are appended and equal or newer versions update existing
