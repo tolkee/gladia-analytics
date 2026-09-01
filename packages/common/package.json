@@ -5,7 +5,8 @@
   "exports": {
     "./errors": "./src/errors.ts",
     "./utils": "./src/utils.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./constants": "./src/constants.ts"
   },
   "scripts": {
     "dev": "bun tsc --noEmit --watch",

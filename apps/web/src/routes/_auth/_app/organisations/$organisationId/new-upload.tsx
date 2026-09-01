@@ -1,6 +1,11 @@
-import { createTranscriptionUploadMutation, FileDropzone } from "#features/uploads";
+import {
+  createTranscriptionUploadMutation,
+  FileDropzone,
+  getTranscriptionUploadRequestError,
+} from "#features/uploads";
 import { Button } from "@gladia-analytics/ui/components/button";
 import { Spinner } from "@gladia-analytics/ui/components/spinner";
+import { TRANSCRIPTION_UPLOAD_MAX_SIZE_LABEL } from "@gladia-analytics/common/constants";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
@@ -28,7 +33,7 @@ function UploadFilePage() {
     isPending,
     reset,
   } = useMutation(createTranscriptionUploadMutation.options(user.id, organisation.id));
-  const errorMessage = fileError ?? error?.response.message;
+  const errorMessage = fileError ?? getTranscriptionUploadRequestError(error);
   const errorId = errorMessage ? "transcription-upload-error" : undefined;
 
   function changeFile(nextFile: File | null) {
@@ -68,7 +73,8 @@ function UploadFilePage() {
           <h1 className="text-3xl font-semibold tracking-tight">Upload transcription data</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
             Choose a JSON file. It must contain a top-level <code>items</code> array, and every item
-            must be a valid Gladia transcription.
+            must be a valid Gladia transcription. The maximum file size is{" "}
+            {TRANSCRIPTION_UPLOAD_MAX_SIZE_LABEL}.
           </p>
         </div>
 

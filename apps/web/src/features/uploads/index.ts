@@ -5,3 +5,4 @@ export {
 } from "./api/get-transcription-upload.query";
 export { FileDropzone } from "./components/file-dropzone";
 export { UploadsDataTable } from "./components/uploads-data-table";
+export { getTranscriptionUploadRequestError } from "./utils";
