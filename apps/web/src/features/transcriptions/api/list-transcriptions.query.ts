@@ -8,12 +8,15 @@ import {
 import type { InfiniteQuery } from "#lib/query";
 import { infiniteQueryOptions, type InfiniteData } from "@tanstack/react-query";
 import type { InferRequestType } from "hono";
-import type { PeriodRange, PeriodSelection } from "../period";
+import { getPeriodRange, type PeriodRange, type PeriodSelection } from "../period";
 
 const endpoint = apiClient.api.organisations[":organisationId"].transcriptions.$get;
 const PAGE_SIZE = 50;
 
 type ListTranscriptionsSuccessResponse = InferSuccessResponseType<typeof endpoint>;
+type TranscriptionsPage = ListTranscriptionsSuccessResponse & { range: PeriodRange };
+type TranscriptionsPageParam = { cursor: string; range: PeriodRange } | null;
+
 type ListTranscriptionsErrorResponse = InferErrorResponseType<typeof endpoint>;
 type ListTranscriptionsRequestQuery = InferRequestType<typeof endpoint>["query"];
 export type TranscriptionSummary = ListTranscriptionsSuccessResponse["data"][number];
@@ -52,7 +55,6 @@ const key = (
   userId: string,
   organisationId: string,
   selection: PeriodSelection,
-  range: PeriodRange,
   listOptions: TranscriptionListOptions,
 ) =>
   selection.type === "preset"
@@ -62,28 +64,36 @@ const key = (
         organisationId,
         "preset",
         selection.period,
-        range.from,
-        range.to,
+        selection.at,
         listOptions,
       ]
-    : ["transcriptions", userId, organisationId, "custom", range.from, range.to, listOptions];
+    : [
+        "transcriptions",
+        userId,
+        organisationId,
+        "custom",
+        selection.from,
+        selection.to,
+        listOptions,
+      ];
 
 const options = (
   userId: string,
   organisationId: string,
   selection: PeriodSelection,
-  range: PeriodRange,
   listOptions: TranscriptionListOptions,
 ) =>
   infiniteQueryOptions<
-    ListTranscriptionsSuccessResponse,
+    TranscriptionsPage,
     ApiError<ListTranscriptionsErrorResponse>,
-    InfiniteData<ListTranscriptionsSuccessResponse, string | null>,
+    InfiniteData<TranscriptionsPage, TranscriptionsPageParam>,
     ReturnType<typeof key>,
-    string | null
+    TranscriptionsPageParam
   >({
-    queryKey: key(userId, organisationId, selection, range, listOptions),
+    queryKey: key(userId, organisationId, selection, listOptions),
     queryFn: async ({ pageParam }) => {
+      // Keep every page on the first page’s window, even after the preset cache is reused.
+      const range = pageParam?.range ?? getPeriodRange(selection);
       const response = await endpoint({
         param: { organisationId },
         query: {
@@ -92,7 +102,7 @@ const options = (
           sort: listOptions.sort,
           order: listOptions.order,
           ...(listOptions.kind ? { kind: listOptions.kind } : {}),
-          ...(pageParam ? { cursor: pageParam } : {}),
+          ...(pageParam ? { cursor: pageParam.cursor } : {}),
         },
       });
 
@@ -100,10 +110,11 @@ const options = (
         throw await jsErrorFromApiError(response);
       }
 
-      return response.json();
+      return { ...(await response.json()), range };
     },
     initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.meta.next,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.next ? { cursor: lastPage.meta.next, range: lastPage.range } : null,
   });
 
 export const listTranscriptionsQuery = {

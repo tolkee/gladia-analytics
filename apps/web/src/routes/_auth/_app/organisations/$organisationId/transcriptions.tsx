@@ -4,7 +4,6 @@ import {
   TranscriptionFilters,
   TranscriptionsDataTable,
   defaultTranscriptionListOptions,
-  getPeriodRange,
   listTranscriptionsQuery,
   periodSearchSchema,
   periodSelectionFromSearch,
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
       order: search.order ?? defaultTranscriptionListOptions.order,
     };
 
-    return { selection, range: getPeriodRange(selection), listOptions };
+    return { selection, listOptions };
   },
   loader: async ({ context, deps, params }) => {
     await context.queryClient.fetchInfiniteQuery(
@@ -49,7 +48,6 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
         context.user.id,
         params.organisationId,
         deps.selection,
-        deps.range,
         deps.listOptions,
       ),
     );
@@ -61,10 +59,10 @@ export const Route = createFileRoute("/_auth/_app/organisations/$organisationId/
 function TranscriptionsPage() {
   const { organisation, user } = Route.useRouteContext();
   const { order, sort, transcriptionId } = Route.useSearch();
-  const { listOptions, range, selection } = Route.useLoaderDeps();
+  const { listOptions, selection } = Route.useLoaderDeps();
   const navigate = Route.useNavigate();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(
-    listTranscriptionsQuery.options(user.id, organisation.id, selection, range, listOptions),
+    listTranscriptionsQuery.options(user.id, organisation.id, selection, listOptions),
   );
   const transcriptions = useMemo(() => data.pages.flatMap((page) => page.data), [data.pages]);
 
@@ -93,6 +91,7 @@ function TranscriptionsPage() {
             ? {
                 ...previous,
                 period: nextSelection.period,
+                at: new Date().toISOString(),
                 from: undefined,
                 to: undefined,
                 transcriptionId: undefined,
@@ -100,6 +99,7 @@ function TranscriptionsPage() {
             : {
                 ...previous,
                 period: undefined,
+                at: undefined,
                 from: nextSelection.from,
                 to: nextSelection.to,
                 transcriptionId: undefined,
