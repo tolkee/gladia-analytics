@@ -6,20 +6,21 @@ export const defaultPeriod = "30d" satisfies Period;
 
 export const periodSearchSchema = z
   .object({
+    at: z.iso.datetime().optional().catch(undefined),
     period: z.enum(periods).optional().catch(undefined),
     from: z.iso.date().optional().catch(undefined),
     to: z.iso.date().optional().catch(undefined),
   })
-  .transform(({ period, from, to }) => {
+  .transform(({ period, from, to, at }) => {
     if (from && to && from <= to) {
       return { from, to };
     }
 
-    return period ? { period } : {};
+    return { ...(period ? { period } : {}), ...(at ? { at } : {}) };
   });
 
 export type PeriodSelection =
-  | { type: "preset"; period: Period }
+  | { type: "preset"; period: Period; at?: string }
   | { type: "custom"; from: string; to: string };
 
 export type PeriodRange = {
@@ -28,6 +29,7 @@ export type PeriodRange = {
 };
 
 export function periodSelectionFromSearch(search: {
+  at?: string;
   period?: Period;
   from?: string;
   to?: string;
@@ -36,7 +38,11 @@ export function periodSelectionFromSearch(search: {
     return { type: "custom", from: search.from, to: search.to };
   }
 
-  return { type: "preset", period: search.period ?? defaultPeriod };
+  return {
+    type: "preset",
+    period: search.period ?? defaultPeriod,
+    ...(search.at ? { at: search.at } : {}),
+  };
 }
 
 export function getPeriodRange(selection: PeriodSelection): PeriodRange {
@@ -48,7 +54,7 @@ export function getPeriodRange(selection: PeriodSelection): PeriodRange {
     return { from: from.toISOString(), to: to.toISOString() };
   }
 
-  const to = new Date();
+  const to = selection.at ? new Date(selection.at) : new Date();
   const from = new Date(to);
 
   if (selection.period === "24h") from.setUTCHours(from.getUTCHours() - 24);

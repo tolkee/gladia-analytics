@@ -27,7 +27,7 @@ type TranscriptionAnalyticsResult = {
 
 const key = (userId: string, organisationId: string, selection: PeriodSelection) =>
   selection.type === "preset"
-    ? ["transcription-analytics", userId, organisationId, "preset", selection.period]
+    ? ["transcription-analytics", userId, organisationId, "preset", selection.period, selection.at]
     : ["transcription-analytics", userId, organisationId, "custom", selection.from, selection.to];
 
 const options = (userId: string, organisationId: string, selection: PeriodSelection) =>

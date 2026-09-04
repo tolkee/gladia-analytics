@@ -1,3 +1,4 @@
+import { periodSearchSchema } from "#features/transcriptions";
 import type { Organisation } from "#features/organisations";
 import {
   Breadcrumb,
@@ -20,6 +21,9 @@ type AppSiteHeaderProps = {
 
 export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
   const pathname = useLocation({ select: (location) => location.pathname });
+  const periodSearch = useLocation({
+    select: (location) => periodSearchSchema.parse(location.search),
+  });
   const pageName = getPageName(pathname);
 
   return (
@@ -34,6 +38,7 @@ export function AppSiteHeader({ organisation }: AppSiteHeaderProps) {
                 render={
                   <Link
                     to="/organisations/$organisationId/analytics"
+                    search={periodSearch}
                     params={{ organisationId: organisation.id }}
                   />
                 }

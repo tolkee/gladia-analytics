@@ -45,7 +45,7 @@ function AnalyticsPage() {
     void navigate({
       search:
         nextSelection.type === "preset"
-          ? { period: nextSelection.period }
+          ? { period: nextSelection.period, at: new Date().toISOString() }
           : { from: nextSelection.from, to: nextSelection.to },
     });
   }

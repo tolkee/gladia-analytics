@@ -1,3 +1,4 @@
+import { periodSearchSchema } from "#features/transcriptions";
 import {
   AiTranscribeAudioIcon,
   Analytics02Icon,
@@ -57,6 +58,9 @@ type AppSidebarProps = {
 export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
   const pathname = useLocation({ select: (location) => location.pathname });
   const navigate = useNavigate();
+  const periodSearch = useLocation({
+    select: (location) => periodSearchSchema.parse(location.search),
+  });
 
   function selectOrganisation(organisationId: string) {
     if (organisationId === organisation.id) {
@@ -67,6 +71,7 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
       void navigate({
         to: "/organisations/$organisationId/transcriptions",
         params: { organisationId },
+        search: periodSearch,
       });
       return;
     }
@@ -75,6 +80,7 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
       void navigate({
         to: "/organisations/$organisationId/uploads",
         params: { organisationId },
+        search: periodSearch,
       });
       return;
     }
@@ -83,6 +89,7 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
       void navigate({
         to: "/organisations/$organisationId/new-upload",
         params: { organisationId },
+        search: periodSearch,
       });
       return;
     }
@@ -90,6 +97,7 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
     void navigate({
       to: "/organisations/$organisationId/analytics",
       params: { organisationId },
+      search: periodSearch,
     });
   }
 
@@ -140,7 +148,13 @@ export function AppSidebar({ organisations, organisation }: AppSidebarProps) {
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.to}>
                   <SidebarMenuButton
-                    render={<Link to={item.to} params={{ organisationId: organisation.id }} />}
+                    render={
+                      <Link
+                        to={item.to}
+                        params={{ organisationId: organisation.id }}
+                        search={periodSearch}
+                      />
+                    }
                     isActive={pathname.endsWith(item.pathSuffix)}
                     tooltip={item.label}
                   >
